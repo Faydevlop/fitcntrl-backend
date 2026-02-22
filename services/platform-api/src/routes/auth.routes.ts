@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { authController } from "../modules/auth/controller/auth.controller";
+import { requireAuthenticated } from "../middlewares/auth.middleware";
+import { requireBodyKeys } from "../middlewares/validate.middleware";
 
 export const authRoutes = Router();
 
@@ -51,8 +53,8 @@ export const authRoutes = Router();
  *       200:
  *         description: Profile fetched
  */
-authRoutes.post("/login", authController.login);
-authRoutes.post("/forgot-password", authController.forgotPassword);
-authRoutes.post("/verify-code", authController.verifyCode);
-authRoutes.post("/reset-password", authController.resetPassword);
-authRoutes.get("/me", authController.me);
+authRoutes.post("/login", requireBodyKeys("email", "password"), authController.login);
+authRoutes.post("/forgot-password", requireBodyKeys("email"), authController.forgotPassword);
+authRoutes.post("/verify-code", requireBodyKeys("email", "code"), authController.verifyCode);
+authRoutes.post("/reset-password", requireBodyKeys("email", "code", "newPassword"), authController.resetPassword);
+authRoutes.get("/me", requireAuthenticated, authController.me);

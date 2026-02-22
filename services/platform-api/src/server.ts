@@ -1,17 +1,47 @@
 import { app } from "./app";
-import { connectMongo } from "./bootstrap/mongo";
+import { connectMongo, disconnectMongo } from "./bootstrap/mongo";
+import { disconnectRedis } from "./bootstrap/redis";
 import { env } from "./config/env";
+import { verifyDependencies } from "./bootstrap/dependency-check";
+import { logger } from "./common/logger/app-logger";
+import { Server } from "http";
 
+let server: Server;
 const start = async (): Promise<void> => {
   await connectMongo();
-  app.listen(env.port, () => {
-    // eslint-disable-next-line no-console
-    console.log(`platform-api running on port ${env.port}`);
+  await verifyDependencies();
+
+  server = app.listen(env.port, () => {
+    logger.info("platform-api started", {
+      port: env.port,
+      env: env.nodeEnv
+    });
   });
 };
 
 start().catch((error) => {
-  // eslint-disable-next-line no-console
-  console.error("platform-api failed to start", error);
+  logger.error("platform-api failed to start", {
+    error: (error as Error).message
+  });
   process.exit(1);
+});
+
+const shutdown = async (signal: string): Promise<void> => {
+  logger.info("platform-api shutdown requested", { signal });
+
+  if (server) {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+
+  await Promise.allSettled([disconnectRedis(), disconnectMongo()]);
+  logger.info("platform-api shutdown complete");
+  process.exit(0);
+};
+
+process.on("SIGINT", () => {
+  void shutdown("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+  void shutdown("SIGTERM");
 });

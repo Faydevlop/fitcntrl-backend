@@ -9,6 +9,7 @@ type MailTransport = {
     text: string;
     html: string;
   }) => Promise<unknown>;
+  verify?: () => Promise<boolean>;
 };
 
 let nodemailerModule: null | { createTransport: (options: unknown) => MailTransport } = null;
@@ -32,3 +33,11 @@ export const mailer = hasSmtpConfig
   : null;
 
 export const isMailerConfigured = (): boolean => Boolean(mailer && nodemailerModule);
+
+export const verifyMailerConnection = async (): Promise<boolean> => {
+  if (!mailer || typeof mailer.verify !== "function") {
+    return false;
+  }
+  await mailer.verify();
+  return true;
+};

@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { gymController } from "../modules/gym/controller/gym.controller";
+import { allowRoles, requireAuthenticated } from "../middlewares/auth.middleware";
+import { requireBodyKeys, requireObjectIdParam } from "../middlewares/validate.middleware";
 
 export const gymRoutes = Router();
+gymRoutes.use(requireAuthenticated, allowRoles("gym_owner"));
 
 /**
  * @swagger
@@ -119,14 +122,18 @@ gymRoutes.get("/dashboard/stats", gymController.dashboardStats);
 gymRoutes.get("/dashboard/growth", gymController.dashboardGrowth);
 
 gymRoutes.get("/members", gymController.listMembers);
-gymRoutes.post("/members", gymController.createMember);
-gymRoutes.get("/members/:id", gymController.getMemberById);
-gymRoutes.patch("/members/:id", gymController.updateMember);
-gymRoutes.delete("/members/:id", gymController.deleteMember);
+gymRoutes.post("/members", requireBodyKeys("name", "phone", "plan", "fee"), gymController.createMember);
+gymRoutes.get("/members/:id", requireObjectIdParam("id"), gymController.getMemberById);
+gymRoutes.patch("/members/:id", requireObjectIdParam("id"), gymController.updateMember);
+gymRoutes.delete("/members/:id", requireObjectIdParam("id"), gymController.deleteMember);
 
 gymRoutes.get("/payments", gymController.listPayments);
-gymRoutes.post("/payments", gymController.createPayment);
+gymRoutes.post(
+  "/payments",
+  requireBodyKeys("memberId", "amount", "paidDate", "monthLabel", "method"),
+  gymController.createPayment
+);
 gymRoutes.get("/payments/pending", gymController.pendingPayments);
 
 gymRoutes.get("/billing", gymController.billingSummary);
-gymRoutes.post("/support", gymController.createSupportTicket);
+gymRoutes.post("/support", requireBodyKeys("subject", "message"), gymController.createSupportTicket);

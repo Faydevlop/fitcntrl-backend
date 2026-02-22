@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
+import { fail } from "../common/utils/http";
 
 export const notFoundHandler = (req: Request, res: Response): void => {
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.originalUrl}`
-  });
+  fail(res, 404, `Route not found: ${req.method} ${req.originalUrl}`);
 };

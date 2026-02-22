@@ -1,4 +1,5 @@
 import swaggerJSDoc from "swagger-jsdoc";
+import { env } from "./env";
 
 export const swaggerSpec = swaggerJSDoc({
   definition: {
@@ -10,7 +11,7 @@ export const swaggerSpec = swaggerJSDoc({
     },
     servers: [
       {
-        url: "http://localhost:4000"
+        url: `http://localhost:${env.port}`
       }
     ],
     components: {
@@ -19,6 +20,52 @@ export const swaggerSpec = swaggerJSDoc({
           type: "http",
           scheme: "bearer",
           bearerFormat: "JWT"
+        }
+      },
+      headers: {
+        XRequestId: {
+          description: "Unique request correlation id.",
+          schema: { type: "string" }
+        },
+        XResponseTime: {
+          description: "Server-side processing latency in milliseconds.",
+          schema: { type: "string", example: "24ms" }
+        },
+        XEnvironment: {
+          description: "Environment that produced this response.",
+          schema: { type: "string", example: "development" }
+        }
+      },
+      schemas: {
+        ApiEnvelope: {
+          type: "object",
+          properties: {
+            success: { type: "boolean" },
+            message: { type: "string" },
+            data: {}
+          }
+        }
+      },
+      responses: {
+        UnauthorizedError: {
+          description: "Authentication failed.",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ApiEnvelope"
+              }
+            }
+          }
+        },
+        ForbiddenError: {
+          description: "Insufficient permission.",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ApiEnvelope"
+              }
+            }
+          }
         }
       }
     }

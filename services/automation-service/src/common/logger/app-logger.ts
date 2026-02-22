@@ -1,0 +1,38 @@
+import { env } from "../../config/env";
+
+type LogLevel = "debug" | "info" | "warn" | "error";
+
+const levelWeight: Record<LogLevel, number> = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40
+};
+
+const shouldLog = (level: LogLevel): boolean => {
+  return levelWeight[level] >= levelWeight[env.logLevel];
+};
+
+const emit = (level: LogLevel, message: string, meta?: Record<string, unknown>): void => {
+  if (!shouldLog(level)) {
+    return;
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(
+    JSON.stringify({
+      level,
+      service: env.serviceName,
+      ts: new Date().toISOString(),
+      message,
+      ...(meta ? { meta } : {})
+    })
+  );
+};
+
+export const logger = {
+  debug: (message: string, meta?: Record<string, unknown>) => emit("debug", message, meta),
+  info: (message: string, meta?: Record<string, unknown>) => emit("info", message, meta),
+  warn: (message: string, meta?: Record<string, unknown>) => emit("warn", message, meta),
+  error: (message: string, meta?: Record<string, unknown>) => emit("error", message, meta)
+};

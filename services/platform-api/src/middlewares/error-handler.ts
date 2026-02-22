@@ -1,13 +1,16 @@
 import { NextFunction, Request, Response } from "express";
+import { fail } from "../common/utils/http";
+import { logger } from "../common/logger/app-logger";
 
 export const errorHandler = (
   err: Error,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): void => {
-  res.status(500).json({
-    success: false,
-    message: err.message || "Internal server error"
+  logger.error("Unhandled platform-api error", {
+    requestId: req.requestContext?.requestId,
+    message: err.message
   });
+  fail(res, 500, err.message || "Internal server error");
 };

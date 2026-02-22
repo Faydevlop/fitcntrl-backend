@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { adminController } from "../modules/admin/controller/admin.controller";
+import { allowRoles, requireAuthenticated } from "../middlewares/auth.middleware";
+import { requireBodyKeys, requireObjectIdParam } from "../middlewares/validate.middleware";
 
 export const adminRoutes = Router();
+adminRoutes.use(requireAuthenticated, allowRoles("admin"));
 
 /**
  * @swagger
@@ -214,27 +217,31 @@ export const adminRoutes = Router();
  *         description: Owner support tickets fetched
  */
 adminRoutes.get("/gyms", adminController.listGyms);
-adminRoutes.post("/gyms", adminController.createGym);
-adminRoutes.get("/gyms/:id", adminController.getGymById);
-adminRoutes.patch("/gyms/:id", adminController.updateGym);
-adminRoutes.delete("/gyms/:id", adminController.deleteGym);
-adminRoutes.post("/gyms/:id/freeze", adminController.freezeGym);
-adminRoutes.post("/gyms/:id/unfreeze", adminController.unfreezeGym);
-adminRoutes.post("/gyms/:id/reset-wa", adminController.resetGymWa);
+adminRoutes.post("/gyms", requireBodyKeys("name", "ownerName", "phone", "planId"), adminController.createGym);
+adminRoutes.get("/gyms/:id", requireObjectIdParam("id"), adminController.getGymById);
+adminRoutes.patch("/gyms/:id", requireObjectIdParam("id"), adminController.updateGym);
+adminRoutes.delete("/gyms/:id", requireObjectIdParam("id"), adminController.deleteGym);
+adminRoutes.post("/gyms/:id/freeze", requireObjectIdParam("id"), adminController.freezeGym);
+adminRoutes.post("/gyms/:id/unfreeze", requireObjectIdParam("id"), adminController.unfreezeGym);
+adminRoutes.post("/gyms/:id/reset-wa", requireObjectIdParam("id"), adminController.resetGymWa);
 
 adminRoutes.get("/plans", adminController.listPlans);
-adminRoutes.post("/plans", adminController.createPlan);
-adminRoutes.patch("/plans/:id", adminController.updatePlan);
+adminRoutes.post("/plans", requireBodyKeys("name", "billing", "price"), adminController.createPlan);
+adminRoutes.patch("/plans/:id", requireObjectIdParam("id"), adminController.updatePlan);
 
 adminRoutes.get("/subscriptions", adminController.listSubscriptions);
 adminRoutes.get("/revenue-stats", adminController.revenueStats);
 
 adminRoutes.get("/whatsapp-phones", adminController.listWhatsAppPhones);
-adminRoutes.post("/whatsapp-phones", adminController.createWhatsAppPhone);
-adminRoutes.patch("/whatsapp-phones/:id", adminController.updateWhatsAppPhone);
+adminRoutes.post(
+  "/whatsapp-phones",
+  requireBodyKeys("phone", "phoneNumberId", "wabaId", "tokenEncrypted"),
+  adminController.createWhatsAppPhone
+);
+adminRoutes.patch("/whatsapp-phones/:id", requireObjectIdParam("id"), adminController.updateWhatsAppPhone);
 
 adminRoutes.get("/activity-logs", adminController.listActivityLogs);
 adminRoutes.get("/announcements", adminController.listAnnouncements);
-adminRoutes.post("/announcements", adminController.createAnnouncement);
+adminRoutes.post("/announcements", requireBodyKeys("message"), adminController.createAnnouncement);
 adminRoutes.get("/enquiries", adminController.listEnquiries);
 adminRoutes.get("/owner-support", adminController.listOwnerSupport);
