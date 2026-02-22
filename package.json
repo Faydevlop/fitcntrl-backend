@@ -1,0 +1,20 @@
+{
+  "name": "gym-management-backend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Gym management backend workspace with platform-api and automation-service",
+  "workspaces": [
+    "services/platform-api",
+    "services/automation-service"
+  ],
+  "scripts": {
+    "dev:platform": "npm run dev --workspace platform-api",
+    "dev:automation": "npm run dev --workspace automation-service",
+    "build": "npm run build --workspace platform-api && npm run build --workspace automation-service",
+    "start:platform": "npm run start --workspace platform-api",
+    "start:automation": "npm run start --workspace automation-service"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
