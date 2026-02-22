@@ -12,6 +12,7 @@ import { applySecurityHeaders, corsGate } from "./middlewares/security.middlewar
 import { isMongoReady } from "./bootstrap/mongo";
 import { checkRedisReady } from "./bootstrap/redis";
 import { logger } from "./common/logger/app-logger";
+import { fail, ok } from "./common/utils/http";
 
 export const app = express();
 
@@ -25,10 +26,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/health", (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "Automation service is healthy"
-  });
+  ok(res, { status: "healthy" }, "Automation service is healthy");
 });
 
 app.get("/ready", async (_req, res) => {
@@ -36,20 +34,18 @@ app.get("/ready", async (_req, res) => {
     const redisReady = await checkRedisReady();
     const mongoReady = isMongoReady();
     const ready = redisReady && mongoReady;
-    res.status(ready ? 200 : 503).json({
-      success: ready,
-      message: ready ? "Automation service is ready" : "Automation service is not ready",
-      checks: {
-        mongo: mongoReady,
-        redis: redisReady
-      }
-    });
+    if (ready) {
+      ok(res, { checks: { mongo: mongoReady, redis: redisReady } }, "Automation service is ready");
+      return;
+    }
+
+    fail(res, 503, "Automation service is not ready", [
+      { field: "mongo", message: mongoReady ? "ok" : "not ready" },
+      { field: "redis", message: redisReady ? "ok" : "not ready" }
+    ]);
   } catch (error) {
     logger.error("Readiness check failed", { error: (error as Error).message });
-    res.status(503).json({
-      success: false,
-      message: "Automation service is not ready"
-    });
+    fail(res, 503, "Automation service is not ready", [{ field: "dependency", message: (error as Error).message }]);
   }
 });
 

@@ -4,6 +4,7 @@ import { outboundController } from "../modules/outbound/controller/outbound.cont
 import { statusController } from "../modules/status/controller/status.controller";
 import { requireInternalAuth } from "../middlewares/internal-auth.middleware";
 import { requireBodyKeys } from "../middlewares/validate.middleware";
+import { asyncHandler } from "../middlewares/async-handler.middleware";
 
 export const whatsappRoutes = Router();
 
@@ -58,18 +59,18 @@ export const whatsappRoutes = Router();
  *         description: Status fetched
  */
 whatsappRoutes.get("/webhook", webhookController.verify);
-whatsappRoutes.post("/webhook", webhookController.receive);
+whatsappRoutes.post("/webhook", asyncHandler(webhookController.receive));
 whatsappRoutes.post(
   "/send-reminder",
   requireInternalAuth,
   requireBodyKeys("gymId", "memberId"),
-  outboundController.sendReminder
+  asyncHandler(outboundController.sendReminder)
 );
 whatsappRoutes.post(
   "/send-report",
   requireInternalAuth,
   requireBodyKeys("gymId", "reportType"),
-  outboundController.sendReport
+  asyncHandler(outboundController.sendReport)
 );
-whatsappRoutes.get("/status", requireInternalAuth, outboundController.status);
-whatsappRoutes.get("/internal/health", requireInternalAuth, statusController.health);
+whatsappRoutes.get("/status", requireInternalAuth, asyncHandler(outboundController.status));
+whatsappRoutes.get("/internal/health", requireInternalAuth, asyncHandler(statusController.health));

@@ -5,11 +5,25 @@ import { env } from "./config/env";
 import { verifyDependencies } from "./bootstrap/dependency-check";
 import { logger } from "./common/logger/app-logger";
 import { Server } from "http";
+import { startReminderWorker } from "./workers/reminder.worker";
+import { startReportWorker } from "./workers/report.worker";
+import { startCommandWorker } from "./workers/command.worker";
+import { startRetryWorker } from "./workers/retry.worker";
+import { startOutboundWorker } from "./workers/outbound.worker";
+import { Worker } from "bullmq";
 
 let server: Server;
+let workers: Worker[] = [];
 const start = async (): Promise<void> => {
   await connectMongo();
   await verifyDependencies();
+  workers = [
+    startReminderWorker(),
+    startReportWorker(),
+    startCommandWorker(),
+    startRetryWorker(),
+    startOutboundWorker()
+  ];
 
   server = app.listen(env.port, () => {
     logger.info("automation-service started", {
@@ -31,7 +45,7 @@ const shutdown = async (signal: string): Promise<void> => {
   if (server) {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
-  await Promise.allSettled([disconnectRedis(), disconnectMongo()]);
+  await Promise.allSettled([...workers.map((worker) => worker.close()), disconnectRedis(), disconnectMongo()]);
   logger.info("automation-service shutdown complete");
   process.exit(0);
 };

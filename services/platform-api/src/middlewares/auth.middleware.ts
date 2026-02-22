@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { UserRole } from "../common/constants/enums";
 import { fail } from "../common/utils/http";
+import { verifyAccessToken } from "../common/utils/token";
 
 const parseBearer = (headerValue?: string): string | null => {
   if (!headerValue || !headerValue.startsWith("Bearer ")) {
@@ -16,15 +17,22 @@ export const requireAuthenticated = (req: Request, res: Response, next: NextFunc
     return;
   }
 
-  const roleHeader = (req.header("x-user-role") || "unknown").toLowerCase();
-  const safeRole: UserRole | "unknown" =
-    roleHeader === "admin" || roleHeader === "gym_owner" ? (roleHeader as UserRole) : "unknown";
+  const payload = verifyAccessToken(token);
+  if (!payload) {
+    fail(res, 401, "Invalid or expired token");
+    return;
+  }
 
   req.authContext = {
     token,
-    role: safeRole,
-    userId: req.header("x-user-id") || undefined
+    role: payload.role as UserRole,
+    userId: payload.sub,
+    gymId: payload.gymId
   };
+
+  if (payload.gymId && !req.header("x-gym-id")) {
+    req.headers["x-gym-id"] = payload.gymId;
+  }
 
   next();
 };

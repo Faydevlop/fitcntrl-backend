@@ -11,6 +11,7 @@ declare global {
         token: string;
         role: UserRole | "unknown";
         userId?: string;
+        gymId?: string;
       };
     }
   }

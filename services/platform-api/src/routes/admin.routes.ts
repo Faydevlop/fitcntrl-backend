@@ -2,6 +2,7 @@ import { Router } from "express";
 import { adminController } from "../modules/admin/controller/admin.controller";
 import { allowRoles, requireAuthenticated } from "../middlewares/auth.middleware";
 import { requireBodyKeys, requireObjectIdParam } from "../middlewares/validate.middleware";
+import { asyncHandler } from "../middlewares/async-handler.middleware";
 
 export const adminRoutes = Router();
 adminRoutes.use(requireAuthenticated, allowRoles("admin"));
@@ -216,32 +217,32 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *       200:
  *         description: Owner support tickets fetched
  */
-adminRoutes.get("/gyms", adminController.listGyms);
-adminRoutes.post("/gyms", requireBodyKeys("name", "ownerName", "phone", "planId"), adminController.createGym);
-adminRoutes.get("/gyms/:id", requireObjectIdParam("id"), adminController.getGymById);
-adminRoutes.patch("/gyms/:id", requireObjectIdParam("id"), adminController.updateGym);
-adminRoutes.delete("/gyms/:id", requireObjectIdParam("id"), adminController.deleteGym);
-adminRoutes.post("/gyms/:id/freeze", requireObjectIdParam("id"), adminController.freezeGym);
-adminRoutes.post("/gyms/:id/unfreeze", requireObjectIdParam("id"), adminController.unfreezeGym);
-adminRoutes.post("/gyms/:id/reset-wa", requireObjectIdParam("id"), adminController.resetGymWa);
+adminRoutes.get("/gyms", asyncHandler(adminController.listGyms));
+adminRoutes.post("/gyms", requireBodyKeys("name", "ownerName", "phone", "planId"), asyncHandler(adminController.createGym));
+adminRoutes.get("/gyms/:id", requireObjectIdParam("id"), asyncHandler(adminController.getGymById));
+adminRoutes.patch("/gyms/:id", requireObjectIdParam("id"), asyncHandler(adminController.updateGym));
+adminRoutes.delete("/gyms/:id", requireObjectIdParam("id"), asyncHandler(adminController.deleteGym));
+adminRoutes.post("/gyms/:id/freeze", requireObjectIdParam("id"), asyncHandler(adminController.freezeGym));
+adminRoutes.post("/gyms/:id/unfreeze", requireObjectIdParam("id"), asyncHandler(adminController.unfreezeGym));
+adminRoutes.post("/gyms/:id/reset-wa", requireObjectIdParam("id"), asyncHandler(adminController.resetGymWa));
 
-adminRoutes.get("/plans", adminController.listPlans);
-adminRoutes.post("/plans", requireBodyKeys("name", "billing", "price"), adminController.createPlan);
-adminRoutes.patch("/plans/:id", requireObjectIdParam("id"), adminController.updatePlan);
+adminRoutes.get("/plans", asyncHandler(adminController.listPlans));
+adminRoutes.post("/plans", requireBodyKeys("name", "billing", "price"), asyncHandler(adminController.createPlan));
+adminRoutes.patch("/plans/:id", requireObjectIdParam("id"), asyncHandler(adminController.updatePlan));
 
-adminRoutes.get("/subscriptions", adminController.listSubscriptions);
-adminRoutes.get("/revenue-stats", adminController.revenueStats);
+adminRoutes.get("/subscriptions", asyncHandler(adminController.listSubscriptions));
+adminRoutes.get("/revenue-stats", asyncHandler(adminController.revenueStats));
 
-adminRoutes.get("/whatsapp-phones", adminController.listWhatsAppPhones);
+adminRoutes.get("/whatsapp-phones", asyncHandler(adminController.listWhatsAppPhones));
 adminRoutes.post(
   "/whatsapp-phones",
   requireBodyKeys("phone", "phoneNumberId", "wabaId", "tokenEncrypted"),
-  adminController.createWhatsAppPhone
+  asyncHandler(adminController.createWhatsAppPhone)
 );
-adminRoutes.patch("/whatsapp-phones/:id", requireObjectIdParam("id"), adminController.updateWhatsAppPhone);
+adminRoutes.patch("/whatsapp-phones/:id", requireObjectIdParam("id"), asyncHandler(adminController.updateWhatsAppPhone));
 
-adminRoutes.get("/activity-logs", adminController.listActivityLogs);
-adminRoutes.get("/announcements", adminController.listAnnouncements);
-adminRoutes.post("/announcements", requireBodyKeys("message"), adminController.createAnnouncement);
-adminRoutes.get("/enquiries", adminController.listEnquiries);
-adminRoutes.get("/owner-support", adminController.listOwnerSupport);
+adminRoutes.get("/activity-logs", asyncHandler(adminController.listActivityLogs));
+adminRoutes.get("/announcements", asyncHandler(adminController.listAnnouncements));
+adminRoutes.post("/announcements", requireBodyKeys("message"), asyncHandler(adminController.createAnnouncement));
+adminRoutes.get("/enquiries", asyncHandler(adminController.listEnquiries));
+adminRoutes.get("/owner-support", asyncHandler(adminController.listOwnerSupport));

@@ -10,7 +10,12 @@ export const requireBodyKeys = (...keys: string[]) => {
     });
 
     if (missing.length > 0) {
-      fail(res, 400, `Missing required fields: ${missing.join(", ")}`);
+      fail(
+        res,
+        400,
+        "Validation failed",
+        missing.map((field) => ({ field, message: `${field} is required` }))
+      );
       return;
     }
 
@@ -24,7 +29,7 @@ export const requireObjectIdParam = (paramName: string) => {
     const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
     if (!objectIdRegex.test(value || "")) {
-      fail(res, 400, `Invalid ${paramName} format`);
+      fail(res, 400, "Validation failed", [{ field: paramName, message: `${paramName} must be a valid ObjectId` }]);
       return;
     }
 

@@ -20,7 +20,7 @@ export const authController = {
     return ok(res, data, "Reset password handled");
   },
   async me(req: Request, res: Response) {
-    const data = await authCore.me({ headers: req.headers });
+    const data = await authCore.me({ userId: req.authContext?.userId });
     return ok(res, data, "Profile fetched");
   }
 };

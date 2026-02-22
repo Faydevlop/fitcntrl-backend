@@ -1,7 +1,12 @@
 import Redis from "ioredis";
 import { env } from "../config/env";
 
-export const redis = new Redis(env.redisUrl, {
+export const redis = new Redis({
+  host: env.redisHost,
+  port: env.redisPort,
+  username: env.redisUsername,
+  password: env.redisPassword,
+  ...(env.redisTls ? { tls: {} } : {}),
   maxRetriesPerRequest: null
 });
 

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { env } from "../../../config/env";
-import { ok } from "../../../common/utils/http";
+import { fail, ok } from "../../../common/utils/http";
 import { webhookCore } from "./core/webhook.core";
 
 export const webhookController = {
@@ -17,7 +17,9 @@ export const webhookController = {
     );
 
     if (!challenge) {
-      return res.status(403).send("Forbidden");
+      return fail(res, 403, "Webhook verification failed", [
+        { field: "hub.verify_token", message: "Token mismatch or missing verification parameters" }
+      ]);
     }
 
     return res.status(200).send(challenge);

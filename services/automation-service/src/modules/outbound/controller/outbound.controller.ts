@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { created, ok } from "../../../common/utils/http";
 import { outboundCore } from "./core/outbound.core";
+import { checkRedisReady } from "../../../bootstrap/redis";
+import { isMongoReady } from "../../../bootstrap/mongo";
 
 export const outboundController = {
   async sendReminder(req: Request, res: Response) {
@@ -12,6 +14,16 @@ export const outboundController = {
     return created(res, data, "Report queued");
   },
   async status(_req: Request, res: Response) {
-    return ok(res, { connected: true, provider: "meta" }, "WhatsApp status fetched");
+    const redisReady = await checkRedisReady();
+    const mongoReady = isMongoReady();
+    return ok(
+      res,
+      {
+        provider: "meta",
+        redisReady,
+        mongoReady
+      },
+      "WhatsApp status fetched"
+    );
   }
 };

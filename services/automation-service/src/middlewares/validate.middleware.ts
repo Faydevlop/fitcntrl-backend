@@ -10,7 +10,12 @@ export const requireBodyKeys = (...keys: string[]) => {
     });
 
     if (missing.length > 0) {
-      fail(res, 400, `Missing required fields: ${missing.join(", ")}`);
+      fail(
+        res,
+        400,
+        "Validation failed",
+        missing.map((field) => ({ field, message: `${field} is required` }))
+      );
       return;
     }
 

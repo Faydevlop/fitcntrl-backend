@@ -1,30 +1,58 @@
 import { Request, Response } from "express";
 import { applyResponseMeta } from "./response-meta";
 
-const sendEnvelope = (
+export type ApiFieldError = {
+  field: string;
+  message: string;
+};
+
+const sendSuccessEnvelope = (
   req: Request,
   res: Response,
   statusCode: number,
-  success: boolean,
   message: string,
   data?: unknown
 ): Response => {
   applyResponseMeta(req, res);
   return res.status(statusCode).json({
-    success,
-    message,
+    meta: {
+      success: true,
+      message
+    },
     data: data ?? null
   });
 };
 
+const sendErrorEnvelope = (
+  req: Request,
+  res: Response,
+  statusCode: number,
+  message: string,
+  errors?: ApiFieldError[]
+): Response => {
+  applyResponseMeta(req, res);
+  return res.status(statusCode).json({
+    meta: {
+      success: false,
+      message
+    },
+    errors: errors ?? []
+  });
+};
+
 export const ok = (res: Response, data: unknown, message = "OK"): Response => {
-  return sendEnvelope(res.req, res, 200, true, message, data);
+  return sendSuccessEnvelope(res.req, res, 200, message, data);
 };
 
 export const created = (res: Response, data: unknown, message = "Created"): Response => {
-  return sendEnvelope(res.req, res, 201, true, message, data);
+  return sendSuccessEnvelope(res.req, res, 201, message, data);
 };
 
-export const fail = (res: Response, statusCode: number, message: string, data?: unknown): Response => {
-  return sendEnvelope(res.req, res, statusCode, false, message, data);
+export const fail = (
+  res: Response,
+  statusCode: number,
+  message: string,
+  errors?: ApiFieldError[]
+): Response => {
+  return sendErrorEnvelope(res.req, res, statusCode, message, errors);
 };

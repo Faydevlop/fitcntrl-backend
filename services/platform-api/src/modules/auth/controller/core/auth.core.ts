@@ -2,18 +2,59 @@ import { createHash, randomInt } from "crypto";
 import { PasswordResetTokenModel } from "../../model/password-reset-token.model";
 import { UserModel } from "../../model/user.model";
 import { sendResetOtpEmail } from "../../service/otp-mail.service";
+import { createAccessToken } from "../../../../common/utils/token";
+import { hashPassword, verifyPassword } from "../../../../common/utils/password";
+import { Types } from "mongoose";
 
 const RESET_OTP_TTL_MINUTES = 10;
 
+type LoginPayload = { email?: string; password?: string };
 type ForgotPasswordPayload = { email?: string };
 type VerifyCodePayload = { email?: string; code?: string };
 type ResetPasswordPayload = { email?: string; code?: string; newPassword?: string };
+type AuthContextPayload = { userId?: string };
 
 const hashValue = (value: string): string => createHash("sha256").update(value).digest("hex");
 
 export const authCore = {
   async login(payload: unknown) {
-    return { action: "login", payload, note: "Implement JWT auth logic" };
+    const { email, password } = payload as LoginPayload;
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      throw new Error("email and password are required");
+    }
+
+    const user = await UserModel.findOne({ email: normalizedEmail });
+    if (!user || !user.isActive) {
+      throw new Error("Invalid credentials");
+    }
+
+    const isValid = verifyPassword(password, user.passwordHash);
+    if (!isValid) {
+      throw new Error("Invalid credentials");
+    }
+
+    user.lastLoginAt = new Date();
+    await user.save();
+
+    const { token, expiresInSeconds } = createAccessToken({
+      sub: user._id.toString(),
+      role: user.role,
+      gymId: user.gymId?.toString()
+    });
+
+    return {
+      tokenType: "Bearer",
+      accessToken: token,
+      expiresInSeconds,
+      user: {
+        id: user._id.toString(),
+        email: user.email,
+        role: user.role,
+        gymId: user.gymId?.toString() || null
+      }
+    };
   },
   async forgotPassword(payload: unknown) {
     const { email } = payload as ForgotPasswordPayload;
@@ -114,13 +155,29 @@ export const authCore = {
       throw new Error("Invalid reset request");
     }
 
-    user.passwordHash = hashValue(newPassword);
+    user.passwordHash = hashPassword(newPassword);
     await user.save();
     await PasswordResetTokenModel.deleteMany({ userId: user._id, channel: "email" });
 
-    return { action: "reset-password", reset: true };
+    return { reset: true };
   },
   async me(userContext: unknown) {
-    return { action: "me", userContext, note: "Implement current user profile fetch logic" };
+    const { userId } = userContext as AuthContextPayload;
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      throw new Error("Invalid auth context");
+    }
+
+    const user = await UserModel.findById(userId).select("_id email role gymId isActive lastLoginAt");
+    if (!user || !user.isActive) {
+      throw new Error("User not found");
+    }
+
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      gymId: user.gymId?.toString() || null,
+      lastLoginAt: user.lastLoginAt || null
+    };
   }
 };

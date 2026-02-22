@@ -17,7 +17,7 @@ const passwordResetTokenSchema = new Schema<PasswordResetTokenDocument>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     channel: { type: String, enum: ["email", "phone", "whatsapp"], required: true },
     codeHash: { type: String, required: true },
-    expiresAt: { type: Date, required: true, index: true },
+    expiresAt: { type: Date, required: true },
     attempts: { type: Number, default: 0 },
     verifiedAt: { type: Date }
   },

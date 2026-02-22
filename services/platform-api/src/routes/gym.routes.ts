@@ -2,6 +2,7 @@ import { Router } from "express";
 import { gymController } from "../modules/gym/controller/gym.controller";
 import { allowRoles, requireAuthenticated } from "../middlewares/auth.middleware";
 import { requireBodyKeys, requireObjectIdParam } from "../middlewares/validate.middleware";
+import { asyncHandler } from "../middlewares/async-handler.middleware";
 
 export const gymRoutes = Router();
 gymRoutes.use(requireAuthenticated, allowRoles("gym_owner"));
@@ -118,22 +119,22 @@ gymRoutes.use(requireAuthenticated, allowRoles("gym_owner"));
  *       201:
  *         description: Support ticket created
  */
-gymRoutes.get("/dashboard/stats", gymController.dashboardStats);
-gymRoutes.get("/dashboard/growth", gymController.dashboardGrowth);
+gymRoutes.get("/dashboard/stats", asyncHandler(gymController.dashboardStats));
+gymRoutes.get("/dashboard/growth", asyncHandler(gymController.dashboardGrowth));
 
-gymRoutes.get("/members", gymController.listMembers);
-gymRoutes.post("/members", requireBodyKeys("name", "phone", "plan", "fee"), gymController.createMember);
-gymRoutes.get("/members/:id", requireObjectIdParam("id"), gymController.getMemberById);
-gymRoutes.patch("/members/:id", requireObjectIdParam("id"), gymController.updateMember);
-gymRoutes.delete("/members/:id", requireObjectIdParam("id"), gymController.deleteMember);
+gymRoutes.get("/members", asyncHandler(gymController.listMembers));
+gymRoutes.post("/members", requireBodyKeys("name", "phone", "plan", "fee"), asyncHandler(gymController.createMember));
+gymRoutes.get("/members/:id", requireObjectIdParam("id"), asyncHandler(gymController.getMemberById));
+gymRoutes.patch("/members/:id", requireObjectIdParam("id"), asyncHandler(gymController.updateMember));
+gymRoutes.delete("/members/:id", requireObjectIdParam("id"), asyncHandler(gymController.deleteMember));
 
-gymRoutes.get("/payments", gymController.listPayments);
+gymRoutes.get("/payments", asyncHandler(gymController.listPayments));
 gymRoutes.post(
   "/payments",
   requireBodyKeys("memberId", "amount", "paidDate", "monthLabel", "method"),
-  gymController.createPayment
+  asyncHandler(gymController.createPayment)
 );
-gymRoutes.get("/payments/pending", gymController.pendingPayments);
+gymRoutes.get("/payments/pending", asyncHandler(gymController.pendingPayments));
 
-gymRoutes.get("/billing", gymController.billingSummary);
-gymRoutes.post("/support", requireBodyKeys("subject", "message"), gymController.createSupportTicket);
+gymRoutes.get("/billing", asyncHandler(gymController.billingSummary));
+gymRoutes.post("/support", requireBodyKeys("subject", "message"), asyncHandler(gymController.createSupportTicket));

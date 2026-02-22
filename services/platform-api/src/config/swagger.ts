@@ -40,9 +40,36 @@ export const swaggerSpec = swaggerJSDoc({
         ApiEnvelope: {
           type: "object",
           properties: {
-            success: { type: "boolean" },
-            message: { type: "string" },
+            meta: {
+              type: "object",
+              properties: {
+                success: { type: "boolean" },
+                message: { type: "string" }
+              }
+            },
             data: {}
+          }
+        },
+        ApiErrorEnvelope: {
+          type: "object",
+          properties: {
+            meta: {
+              type: "object",
+              properties: {
+                success: { type: "boolean", example: false },
+                message: { type: "string", example: "Validation failed" }
+              }
+            },
+            errors: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  field: { type: "string", example: "planName" },
+                  message: { type: "string", example: "Plan name is required" }
+                }
+              }
+            }
           }
         }
       },
@@ -52,7 +79,7 @@ export const swaggerSpec = swaggerJSDoc({
           content: {
             "application/json": {
               schema: {
-                $ref: "#/components/schemas/ApiEnvelope"
+                $ref: "#/components/schemas/ApiErrorEnvelope"
               }
             }
           }
@@ -62,7 +89,7 @@ export const swaggerSpec = swaggerJSDoc({
           content: {
             "application/json": {
               schema: {
-                $ref: "#/components/schemas/ApiEnvelope"
+                $ref: "#/components/schemas/ApiErrorEnvelope"
               }
             }
           }
