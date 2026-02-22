@@ -7,7 +7,9 @@ Single repository, two separate TypeScript Express services:
 
 ## Quick Start
 
-1. Copy `.env.example` to `.env` and update values.
+1. Create service env files:
+   - `services/platform-api/.env` from `services/platform-api/.env.example`
+   - `services/automation-service/.env` from `services/automation-service/.env.example`
 2. Start infra:
    - `docker compose up -d`
 3. Install dependencies:
