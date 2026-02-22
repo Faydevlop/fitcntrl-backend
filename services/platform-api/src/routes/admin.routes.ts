@@ -10,18 +10,32 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
 /**
  * @swagger
  * tags:
- *   - name: Admin
- *     description: Super admin APIs
+ *   - name: Admin Gyms
+ *     description: Gym onboarding and lifecycle management.
+ *   - name: Admin Plans
+ *     description: Subscription plan management.
+ *   - name: Admin Subscriptions
+ *     description: Subscription and platform revenue views.
+ *   - name: Admin WhatsApp
+ *     description: WhatsApp infrastructure and line controls.
+ *   - name: Admin Activity
+ *     description: Audit activity logs.
+ *   - name: Admin Announcements
+ *     description: Platform broadcast announcements.
+ *   - name: Admin Enquiries
+ *     description: Sales and contact enquiry management.
+ *   - name: Admin Support
+ *     description: Gym owner support ticket management.
  *
  * /api/admin/gyms:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Gyms]
  *     summary: List all gyms
  *     responses:
  *       200:
  *         description: Gyms fetched
  *   post:
- *     tags: [Admin]
+ *     tags: [Admin Gyms]
  *     summary: Onboard a new gym
  *     responses:
  *       201:
@@ -29,7 +43,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/gyms/{id}:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Gyms]
  *     summary: Get gym details
  *     parameters:
  *       - in: path
@@ -41,7 +55,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *       200:
  *         description: Gym fetched
  *   patch:
- *     tags: [Admin]
+ *     tags: [Admin Gyms]
  *     summary: Update gym details
  *     parameters:
  *       - in: path
@@ -53,7 +67,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *       200:
  *         description: Gym updated
  *   delete:
- *     tags: [Admin]
+ *     tags: [Admin Gyms]
  *     summary: Suspend or remove gym
  *     parameters:
  *       - in: path
@@ -67,7 +81,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/gyms/{id}/freeze:
  *   post:
- *     tags: [Admin]
+ *     tags: [Admin Gyms]
  *     summary: Freeze gym account
  *     parameters:
  *       - in: path
@@ -81,7 +95,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/gyms/{id}/unfreeze:
  *   post:
- *     tags: [Admin]
+ *     tags: [Admin Gyms]
  *     summary: Unfreeze gym account
  *     parameters:
  *       - in: path
@@ -95,7 +109,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/gyms/{id}/reset-wa:
  *   post:
- *     tags: [Admin]
+ *     tags: [Admin Gyms]
  *     summary: Reset monthly WhatsApp usage
  *     parameters:
  *       - in: path
@@ -109,13 +123,13 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/plans:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Plans]
  *     summary: List plans
  *     responses:
  *       200:
  *         description: Plans fetched
  *   post:
- *     tags: [Admin]
+ *     tags: [Admin Plans]
  *     summary: Create plan
  *     responses:
  *       201:
@@ -123,7 +137,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/plans/{id}:
  *   patch:
- *     tags: [Admin]
+ *     tags: [Admin Plans]
  *     summary: Update plan
  *     parameters:
  *       - in: path
@@ -137,7 +151,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/subscriptions:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Subscriptions]
  *     summary: List gym subscriptions
  *     responses:
  *       200:
@@ -145,7 +159,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/revenue-stats:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Subscriptions]
  *     summary: Platform revenue stats
  *     responses:
  *       200:
@@ -153,13 +167,13 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/whatsapp-phones:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin WhatsApp]
  *     summary: List WhatsApp lines
  *     responses:
  *       200:
  *         description: WhatsApp phones fetched
  *   post:
- *     tags: [Admin]
+ *     tags: [Admin WhatsApp]
  *     summary: Add WhatsApp line
  *     responses:
  *       201:
@@ -167,7 +181,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/whatsapp-phones/{id}:
  *   patch:
- *     tags: [Admin]
+ *     tags: [Admin WhatsApp]
  *     summary: Update WhatsApp line credentials
  *     parameters:
  *       - in: path
@@ -181,7 +195,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/activity-logs:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Activity]
  *     summary: Fetch activity logs
  *     responses:
  *       200:
@@ -189,13 +203,13 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/announcements:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Announcements]
  *     summary: List announcements
  *     responses:
  *       200:
  *         description: Announcements fetched
  *   post:
- *     tags: [Admin]
+ *     tags: [Admin Announcements]
  *     summary: Create announcement
  *     responses:
  *       201:
@@ -203,7 +217,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/enquiries:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Enquiries]
  *     summary: List sales enquiries
  *     responses:
  *       200:
@@ -211,7 +225,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *
  * /api/admin/owner-support:
  *   get:
- *     tags: [Admin]
+ *     tags: [Admin Support]
  *     summary: List owner support tickets
  *     responses:
  *       200:

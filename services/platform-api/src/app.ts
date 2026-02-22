@@ -1,5 +1,4 @@
 import express from "express";
-import swaggerUi from "swagger-ui-express";
 import { apiRouter } from "./routes/index.routes";
 import { env } from "./config/env";
 import { swaggerSpec } from "./config/swagger";
@@ -15,6 +14,33 @@ import { requestLog } from "./middlewares/request-log.middleware";
 import { fail, ok } from "./common/utils/http";
 
 export const app = express();
+const stoplightDocsHtml = `
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FitCntrl Platform OpenAPI Docs</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@stoplight/elements/styles.min.css"
+    />
+    <style>
+      html, body, #docs { height: 100%; margin: 0; }
+      body { background: #ffffff; }
+    </style>
+    <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
+  </head>
+  <body>
+    <elements-api
+      id="docs"
+      apiDescriptionUrl="/openapi.json"
+      router="hash"
+      layout="responsive"
+    />
+  </body>
+</html>
+`;
 
 app.disable("x-powered-by");
 app.use(attachRequestContext);
@@ -49,7 +75,13 @@ app.get("/ready", async (_req, res) => {
   }
 });
 
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/openapi.json", (_req, res) => {
+  res.json(swaggerSpec);
+});
+
+app.get("/docs", (_req, res) => {
+  res.type("html").send(stoplightDocsHtml);
+});
 app.use(env.apiPrefix, apiRouter);
 
 app.use(notFoundHandler);
