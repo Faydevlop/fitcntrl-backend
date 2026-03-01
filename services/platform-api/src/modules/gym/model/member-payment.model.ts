@@ -25,9 +25,9 @@ const memberPaymentSchema = new Schema<MemberPaymentDocument>(
     method: { type: String, enum: ["cash", "upi", "card", "online"], required: true },
     isPartial: { type: Boolean, default: false },
     notes: { type: String, trim: true },
-    receivedByUserId: { type: Schema.Types.ObjectId, ref: "User", required: true }
+    receivedByUserId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 memberPaymentSchema.index({ gymId: 1, paidDate: -1 });

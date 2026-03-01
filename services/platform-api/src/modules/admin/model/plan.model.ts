@@ -27,9 +27,9 @@ const planSchema = new Schema<PlanDocument>(
     active: { type: Boolean, default: true },
     providerPlanId: { type: String },
     trialDays: { type: Number, min: 0 },
-    gracePeriodDays: { type: Number, min: 0 }
+    gracePeriodDays: { type: Number, min: 0 },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 planSchema.index({ name: 1, billing: 1 }, { unique: true });

@@ -47,8 +47,8 @@ export const outboundCore = {
         memberName: member.name,
         amount: payload.amount || member.fee,
         dueDate: payload.dueDate || member.nextDueDate,
-        reason: payload.reason || "payment_due"
-      }
+        reason: payload.reason || "payment_due",
+      },
     };
 
     const messageLog = await WhatsAppMessageLogModel.create({
@@ -58,21 +58,21 @@ export const outboundCore = {
       type: "payment_reminder",
       templateName: "payment_due_reminder",
       status: "queued",
-      payload: queueMessage
+      payload: queueMessage,
     });
 
     const reminderJobPayload = { ...queueMessage, messageLogId: messageLog._id.toString() };
     const reminderJob = await waReminderQueue.add("member-reminder", reminderJobPayload, {
-      jobId: `wa-reminder:${messageLog._id.toString()}`
+      jobId: `wa-reminder:${messageLog._id.toString()}`,
     });
     const outboundJob = await waOutboundQueue.add("send-message", reminderJobPayload, {
-      jobId: `wa-outbound:${messageLog._id.toString()}`
+      jobId: `wa-outbound:${messageLog._id.toString()}`,
     });
 
     return {
       reminderJobId: reminderJob.id,
       outboundJobId: outboundJob.id,
-      messageLogId: messageLog._id.toString()
+      messageLogId: messageLog._id.toString(),
     };
   },
 
@@ -86,12 +86,16 @@ export const outboundCore = {
     const [gym, owner, pendingStats] = await Promise.all([
       GymRefModel.findById(gymId).lean(),
       payload.ownerUserId && Types.ObjectId.isValid(payload.ownerUserId)
-        ? UserRefModel.findOne({ _id: new Types.ObjectId(payload.ownerUserId), gymId, role: "gym_owner" }).lean()
+        ? UserRefModel.findOne({
+            _id: new Types.ObjectId(payload.ownerUserId),
+            gymId,
+            role: "gym_owner",
+          }).lean()
         : UserRefModel.findOne({ gymId, role: "gym_owner", isActive: true }).lean(),
       MemberRefModel.aggregate([
         { $match: { gymId, paymentStatus: "pending" } },
-        { $group: { _id: null, pendingCount: { $sum: 1 }, pendingAmount: { $sum: "$fee" } } }
-      ])
+        { $group: { _id: null, pendingCount: { $sum: 1 }, pendingAmount: { $sum: "$fee" } } },
+      ]),
     ]);
 
     if (!gym) {
@@ -107,7 +111,7 @@ export const outboundCore = {
       pendingCount: pendingStats[0]?.pendingCount || 0,
       pendingAmount: pendingStats[0]?.pendingAmount || 0,
       generatedAt: new Date().toISOString(),
-      dateRange: payload.dateRange || null
+      dateRange: payload.dateRange || null,
     };
 
     const queueMessage = {
@@ -116,7 +120,7 @@ export const outboundCore = {
       to: normalizePhone(owner.phone),
       messageType: "text",
       templateName: "owner_pending_report",
-      variables: reportSummary
+      variables: reportSummary,
     };
 
     const messageLog = await WhatsAppMessageLogModel.create({
@@ -126,22 +130,22 @@ export const outboundCore = {
       type: "owner_report",
       templateName: "owner_pending_report",
       status: "queued",
-      payload: queueMessage
+      payload: queueMessage,
     });
 
     const reportPayload = { ...queueMessage, messageLogId: messageLog._id.toString() };
     const reportJob = await waReportQueue.add("owner-report", reportPayload, {
-      jobId: `wa-report:${messageLog._id.toString()}`
+      jobId: `wa-report:${messageLog._id.toString()}`,
     });
     const outboundJob = await waOutboundQueue.add("send-message", reportPayload, {
-      jobId: `wa-outbound:${messageLog._id.toString()}`
+      jobId: `wa-outbound:${messageLog._id.toString()}`,
     });
 
     return {
       reportJobId: reportJob.id,
       outboundJobId: outboundJob.id,
       messageLogId: messageLog._id.toString(),
-      report: reportSummary
+      report: reportSummary,
     };
-  }
+  },
 };

@@ -10,7 +10,7 @@ export const requestLog = (req: Request, res: Response, next: NextFunction): voi
       method: req.method,
       path: req.originalUrl,
       statusCode: res.statusCode,
-      durationMs: Date.now() - start
+      durationMs: Date.now() - start,
     });
   });
 

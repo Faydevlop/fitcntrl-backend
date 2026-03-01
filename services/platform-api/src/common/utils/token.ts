@@ -26,7 +26,7 @@ const parseExpiryToSeconds = (value: string): number => {
     s: 1,
     m: 60,
     h: 60 * 60,
-    d: 24 * 60 * 60
+    d: 24 * 60 * 60,
   };
 
   return amount * (multipliers[unit] || 1);
@@ -46,7 +46,7 @@ export const createAccessToken = (payload: {
   const fullPayload: JwtPayload = {
     ...payload,
     iat: nowSeconds,
-    exp: nowSeconds + expiresInSeconds
+    exp: nowSeconds + expiresInSeconds,
   };
 
   const headerPart = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
@@ -55,7 +55,7 @@ export const createAccessToken = (payload: {
 
   return {
     token: `${headerPart}.${payloadPart}.${signaturePart}`,
-    expiresInSeconds
+    expiresInSeconds,
   };
 };
 

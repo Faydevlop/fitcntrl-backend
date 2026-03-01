@@ -7,30 +7,30 @@ export const swaggerSpec = swaggerJSDoc({
     info: {
       title: "Gym Automation API",
       version: "1.0.0",
-      description: "Webhook and WhatsApp automation APIs."
+      description: "Webhook and WhatsApp automation APIs.",
     },
     servers: [
       {
-        url: `http://localhost:${env.port}`
-      }
+        url: `http://localhost:${env.port}`,
+      },
     ],
     components: {
       securitySchemes: {
         internalTokenAuth: {
           type: "apiKey",
           in: "header",
-          name: "X-Internal-Token"
-        }
+          name: "X-Internal-Token",
+        },
       },
       headers: {
         XRequestId: {
           description: "Unique request correlation id.",
-          schema: { type: "string" }
+          schema: { type: "string" },
         },
         XResponseTime: {
           description: "Server-side processing latency in milliseconds.",
-          schema: { type: "string", example: "18ms" }
-        }
+          schema: { type: "string", example: "18ms" },
+        },
       },
       schemas: {
         ApiEnvelope: {
@@ -40,11 +40,11 @@ export const swaggerSpec = swaggerJSDoc({
               type: "object",
               properties: {
                 success: { type: "boolean" },
-                message: { type: "string" }
-              }
+                message: { type: "string" },
+              },
             },
-            data: {}
-          }
+            data: {},
+          },
         },
         ApiErrorEnvelope: {
           type: "object",
@@ -53,8 +53,8 @@ export const swaggerSpec = swaggerJSDoc({
               type: "object",
               properties: {
                 success: { type: "boolean", example: false },
-                message: { type: "string", example: "Validation failed" }
-              }
+                message: { type: "string", example: "Validation failed" },
+              },
             },
             errors: {
               type: "array",
@@ -62,14 +62,14 @@ export const swaggerSpec = swaggerJSDoc({
                 type: "object",
                 properties: {
                   field: { type: "string", example: "memberId" },
-                  message: { type: "string", example: "memberId is required" }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  message: { type: "string", example: "memberId is required" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
-  apis: ["src/routes/*.ts"]
+  apis: ["src/routes/*.ts"],
 });

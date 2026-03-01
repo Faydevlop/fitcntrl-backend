@@ -25,9 +25,9 @@ const enquirySchema = new Schema<EnquiryDocument>(
     membersCount: { type: String, required: true, trim: true },
     message: { type: String, required: true, trim: true },
     status: { type: String, enum: ["new", "contacted", "closed"], default: "new", index: true },
-    assignedTo: { type: Schema.Types.ObjectId, ref: "User" }
+    assignedTo: { type: Schema.Types.ObjectId, ref: "User" },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 enquirySchema.index({ status: 1, createdAt: -1 });

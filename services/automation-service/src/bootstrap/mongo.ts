@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import dns from "dns";
 import { env } from "../config/env";
 import { logger } from "../common/logger/app-logger";
 

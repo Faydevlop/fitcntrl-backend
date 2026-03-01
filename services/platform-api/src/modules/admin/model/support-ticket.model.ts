@@ -26,9 +26,9 @@ const supportReplySchema = new Schema<SupportReply>(
     sender: { type: String, enum: ["owner", "admin"], required: true },
     senderName: { type: String, required: true, trim: true },
     message: { type: String, required: true, trim: true },
-    timestamp: { type: Date, required: true }
+    timestamp: { type: Date, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const supportTicketSchema = new Schema<SupportTicketDocument>(
@@ -40,9 +40,9 @@ const supportTicketSchema = new Schema<SupportTicketDocument>(
     status: { type: String, enum: ["open", "in_progress", "resolved"], default: "open" },
     priority: { type: String, enum: ["low", "medium", "high"], default: "medium" },
     replies: { type: [supportReplySchema], default: [] },
-    lastUpdatedAt: { type: Date, required: true, default: Date.now }
+    lastUpdatedAt: { type: Date, required: true, default: Date.now },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 supportTicketSchema.index({ gymId: 1, status: 1 });

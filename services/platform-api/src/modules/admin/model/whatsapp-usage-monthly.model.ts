@@ -26,9 +26,9 @@ const dailyUsageSchema = new Schema<DailyUsage>(
     date: { type: String, required: true },
     sent: { type: Number, required: true, min: 0 },
     failed: { type: Number, required: true, min: 0 },
-    conversations: { type: Number, required: true, min: 0 }
+    conversations: { type: Number, required: true, min: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const whatsappUsageMonthlySchema = new Schema<WhatsAppUsageMonthlyDocument>(
@@ -40,14 +40,14 @@ const whatsappUsageMonthlySchema = new Schema<WhatsAppUsageMonthlyDocument>(
     messagesFailed: { type: Number, required: true, min: 0, default: 0 },
     conversationsCount: { type: Number, required: true, min: 0, default: 0 },
     deliveryRate: { type: Number, required: true, min: 0, max: 100, default: 0 },
-    daily: { type: [dailyUsageSchema], default: [] }
+    daily: { type: [dailyUsageSchema], default: [] },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 whatsappUsageMonthlySchema.index({ gymId: 1, monthKey: 1 }, { unique: true });
 
 export const WhatsAppUsageMonthlyModel = model<WhatsAppUsageMonthlyDocument>(
   "WhatsAppUsageMonthly",
-  whatsappUsageMonthlySchema
+  whatsappUsageMonthlySchema,
 );

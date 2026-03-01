@@ -31,14 +31,14 @@ const whatsappMessageLogSchema = new Schema<WhatsAppMessageLogDocument>(
     payload: { type: Schema.Types.Mixed, required: true },
     error: { type: String, trim: true },
     sentAt: { type: Date },
-    deliveredAt: { type: Date }
+    deliveredAt: { type: Date },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 whatsappMessageLogSchema.index({ gymId: 1, createdAt: -1 });
 
 export const WhatsAppMessageLogModel = model<WhatsAppMessageLogDocument>(
   "WhatsAppMessageLog",
-  whatsappMessageLogSchema
+  whatsappMessageLogSchema,
 );

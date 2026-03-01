@@ -5,18 +5,18 @@ import { queueConnection } from "../common/utils/queue-connection";
 export const startReminderWorker = (): Worker => {
   return new Worker(
     "wa.reminder",
-    async (job) => {
+    async job => {
       const messageLogId = job.data?.messageLogId as string | undefined;
       if (messageLogId) {
         await WhatsAppMessageLogModel.findByIdAndUpdate(messageLogId, {
           $set: {
             status: "sent",
-            sentAt: new Date()
-          }
+            sentAt: new Date(),
+          },
         });
       }
       return { processed: true };
     },
-    { connection: queueConnection, prefix: "gymflow" }
+    { connection: queueConnection, prefix: "gymflow" },
   );
 };

@@ -60,6 +60,6 @@ authRoutes.post("/verify-code", requireBodyKeys("email", "code"), asyncHandler(a
 authRoutes.post(
   "/reset-password",
   requireBodyKeys("email", "code", "newPassword"),
-  asyncHandler(authController.resetPassword)
+  asyncHandler(authController.resetPassword),
 );
 authRoutes.get("/me", requireAuthenticated, asyncHandler(authController.me));

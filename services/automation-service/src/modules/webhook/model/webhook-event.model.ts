@@ -21,9 +21,9 @@ const webhookEventSchema = new Schema<WebhookEventDocument>(
     signatureValid: { type: Boolean, required: true },
     payload: { type: Schema.Types.Mixed, required: true },
     status: { type: String, enum: ["received", "processed", "failed"], default: "received", index: true },
-    processedAt: { type: Date }
+    processedAt: { type: Date },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 webhookEventSchema.index({ provider: 1, eventId: 1 }, { unique: true });

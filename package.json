@@ -12,9 +12,29 @@
     "dev:automation": "npm run dev --workspace automation-service",
     "build": "npm run build --workspace platform-api && npm run build --workspace automation-service",
     "start:platform": "npm run start --workspace platform-api",
-    "start:automation": "npm run start --workspace automation-service"
+    "start:automation": "npm run start --workspace automation-service",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "cspell": "cspell \"services/**/*.ts\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "services/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "cspell --no-must-find-files --no-progress"
+    ]
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "cspell": "^9.7.0",
+    "eslint": "^10.0.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.0",
+    "prettier": "^3.8.1"
   }
 }

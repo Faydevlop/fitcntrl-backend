@@ -13,15 +13,15 @@ export const webhookController = {
       req.query["hub.mode"] as string | undefined,
       req.query["hub.verify_token"] as string | undefined,
       req.query["hub.challenge"] as string | undefined,
-      env.webhookVerifyToken
+      env.webhookVerifyToken,
     );
 
     if (!challenge) {
       return fail(res, 403, "Webhook verification failed", [
-        { field: "hub.verify_token", message: "Token mismatch or missing verification parameters" }
+        { field: "hub.verify_token", message: "Token mismatch or missing verification parameters" },
       ]);
     }
 
     return res.status(200).send(challenge);
-  }
+  },
 };

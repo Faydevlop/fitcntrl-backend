@@ -48,7 +48,7 @@ const parseCorsAllowlist = (): string[] => {
   const raw = process.env.CORS_ALLOWLIST || "";
   return raw
     .split(",")
-    .map((value) => value.trim())
+    .map(value => value.trim())
     .filter(Boolean);
 };
 
@@ -56,7 +56,7 @@ const parseDnsServers = (): string[] => {
   const raw = process.env.MONGO_DNS_SERVERS || "";
   return raw
     .split(",")
-    .map((value) => value.trim())
+    .map(value => value.trim())
     .filter(Boolean);
 };
 
@@ -80,7 +80,7 @@ const parseRedisConfig = (): RedisConfig => {
       redisPort: Number(parsedUrl.port || (protocol === "rediss:" ? 6380 : 6379)),
       redisUsername: decodeURIComponent(parsedUrl.username || "default"),
       redisPassword: decodeURIComponent(parsedUrl.password || ""),
-      redisTls: protocol === "rediss:"
+      redisTls: protocol === "rediss:",
     };
   }
 
@@ -89,7 +89,7 @@ const parseRedisConfig = (): RedisConfig => {
     redisPort: readNumber("REDIS_PORT", 6379),
     redisUsername: readOptional("REDIS_USERNAME", "default"),
     redisPassword: readRequired("REDIS_PASSWORD"),
-    redisTls: readBoolean("REDIS_TLS", false)
+    redisTls: readBoolean("REDIS_TLS", false),
   };
 };
 
@@ -119,5 +119,5 @@ export const env = {
   smtpPass: process.env.SMTP_PASS || "",
   smtpSecure: readBoolean("SMTP_SECURE", false),
   mailFrom: readOptional("MAIL_FROM", "no-reply@fitcntrl.com"),
-  appName: readOptional("APP_NAME", "FitCntrl")
+  appName: readOptional("APP_NAME", "FitCntrl"),
 };

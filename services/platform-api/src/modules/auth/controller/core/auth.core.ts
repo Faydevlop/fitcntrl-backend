@@ -41,7 +41,7 @@ export const authCore = {
     const { token, expiresInSeconds } = createAccessToken({
       sub: user._id.toString(),
       role: user.role,
-      gymId: user.gymId?.toString()
+      gymId: user.gymId?.toString(),
     });
 
     return {
@@ -52,8 +52,8 @@ export const authCore = {
         id: user._id.toString(),
         email: user.email,
         role: user.role,
-        gymId: user.gymId?.toString() || null
-      }
+        gymId: user.gymId?.toString() || null,
+      },
     };
   },
   async forgotPassword(payload: unknown) {
@@ -70,7 +70,7 @@ export const authCore = {
         action: "forgot-password",
         email: normalizedEmail,
         sent: true,
-        expiresInMinutes: RESET_OTP_TTL_MINUTES
+        expiresInMinutes: RESET_OTP_TTL_MINUTES,
       };
     }
 
@@ -83,9 +83,9 @@ export const authCore = {
         codeHash: hashValue(otpCode),
         expiresAt,
         attempts: 0,
-        verifiedAt: undefined
+        verifiedAt: undefined,
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true },
     );
 
     await sendResetOtpEmail(normalizedEmail, otpCode, RESET_OTP_TTL_MINUTES);
@@ -94,7 +94,7 @@ export const authCore = {
       action: "forgot-password",
       email: normalizedEmail,
       sent: true,
-      expiresInMinutes: RESET_OTP_TTL_MINUTES
+      expiresInMinutes: RESET_OTP_TTL_MINUTES,
     };
   },
   async verifyCode(payload: unknown) {
@@ -113,7 +113,7 @@ export const authCore = {
     const token = await PasswordResetTokenModel.findOne({
       userId: user._id,
       channel: "email",
-      expiresAt: { $gt: new Date() }
+      expiresAt: { $gt: new Date() },
     });
 
     if (!token || token.codeHash !== hashValue(code)) {
@@ -148,7 +148,7 @@ export const authCore = {
     const token = await PasswordResetTokenModel.findOne({
       userId: user._id,
       channel: "email",
-      expiresAt: { $gt: new Date() }
+      expiresAt: { $gt: new Date() },
     });
 
     if (!token || token.codeHash !== hashValue(code)) {
@@ -177,7 +177,7 @@ export const authCore = {
       email: user.email,
       role: user.role,
       gymId: user.gymId?.toString() || null,
-      lastLoginAt: user.lastLoginAt || null
+      lastLoginAt: user.lastLoginAt || null,
     };
-  }
+  },
 };

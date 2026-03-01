@@ -22,5 +22,5 @@ export const authController = {
   async me(req: Request, res: Response) {
     const data = await authCore.me({ userId: (req as any).authContext?.userId });
     return ok(res, data, "Profile fetched");
-  }
+  },
 };

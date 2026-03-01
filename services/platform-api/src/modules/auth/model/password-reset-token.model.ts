@@ -19,14 +19,14 @@ const passwordResetTokenSchema = new Schema<PasswordResetTokenDocument>(
     codeHash: { type: String, required: true },
     expiresAt: { type: Date, required: true },
     attempts: { type: Number, default: 0 },
-    verifiedAt: { type: Date }
+    verifiedAt: { type: Date },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const PasswordResetTokenModel = model<PasswordResetTokenDocument>(
   "PasswordResetToken",
-  passwordResetTokenSchema
+  passwordResetTokenSchema,
 );

@@ -232,7 +232,11 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *         description: Owner support tickets fetched
  */
 adminRoutes.get("/gyms", asyncHandler(adminController.listGyms));
-adminRoutes.post("/gyms", requireBodyKeys("name", "ownerName", "phone", "planId"), asyncHandler(adminController.createGym));
+adminRoutes.post(
+  "/gyms",
+  requireBodyKeys("name", "ownerName", "phone", "planId"),
+  asyncHandler(adminController.createGym),
+);
 adminRoutes.get("/gyms/:id", requireObjectIdParam("id"), asyncHandler(adminController.getGymById));
 adminRoutes.patch("/gyms/:id", requireObjectIdParam("id"), asyncHandler(adminController.updateGym));
 adminRoutes.delete("/gyms/:id", requireObjectIdParam("id"), asyncHandler(adminController.deleteGym));
@@ -241,7 +245,11 @@ adminRoutes.post("/gyms/:id/unfreeze", requireObjectIdParam("id"), asyncHandler(
 adminRoutes.post("/gyms/:id/reset-wa", requireObjectIdParam("id"), asyncHandler(adminController.resetGymWa));
 
 adminRoutes.get("/plans", asyncHandler(adminController.listPlans));
-adminRoutes.post("/plans", requireBodyKeys("name", "billing", "price"), asyncHandler(adminController.createPlan));
+adminRoutes.post(
+  "/plans",
+  requireBodyKeys("name", "billing", "price"),
+  asyncHandler(adminController.createPlan),
+);
 adminRoutes.patch("/plans/:id", requireObjectIdParam("id"), asyncHandler(adminController.updatePlan));
 
 adminRoutes.get("/subscriptions", asyncHandler(adminController.listSubscriptions));
@@ -251,12 +259,20 @@ adminRoutes.get("/whatsapp-phones", asyncHandler(adminController.listWhatsAppPho
 adminRoutes.post(
   "/whatsapp-phones",
   requireBodyKeys("phone", "phoneNumberId", "wabaId", "tokenEncrypted"),
-  asyncHandler(adminController.createWhatsAppPhone)
+  asyncHandler(adminController.createWhatsAppPhone),
 );
-adminRoutes.patch("/whatsapp-phones/:id", requireObjectIdParam("id"), asyncHandler(adminController.updateWhatsAppPhone));
+adminRoutes.patch(
+  "/whatsapp-phones/:id",
+  requireObjectIdParam("id"),
+  asyncHandler(adminController.updateWhatsAppPhone),
+);
 
 adminRoutes.get("/activity-logs", asyncHandler(adminController.listActivityLogs));
 adminRoutes.get("/announcements", asyncHandler(adminController.listAnnouncements));
-adminRoutes.post("/announcements", requireBodyKeys("message"), asyncHandler(adminController.createAnnouncement));
+adminRoutes.post(
+  "/announcements",
+  requireBodyKeys("message"),
+  asyncHandler(adminController.createAnnouncement),
+);
 adminRoutes.get("/enquiries", asyncHandler(adminController.listEnquiries));
 adminRoutes.get("/owner-support", asyncHandler(adminController.listOwnerSupport));

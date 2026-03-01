@@ -28,7 +28,7 @@ const logAdminAction = async (
   action: string,
   entityType: string,
   entityId?: string,
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown>,
 ): Promise<void> => {
   const actorUserId = (req as any)?.authContext?.userId;
   if (!actorUserId || !Types.ObjectId.isValid(actorUserId)) {
@@ -42,7 +42,7 @@ const logAdminAction = async (
     entityType,
     entityId,
     ip: req?.ip,
-    meta
+    meta,
   });
 };
 
@@ -70,12 +70,15 @@ export const adminCore = {
     }
     if (query.search) {
       const keyword = String(query.search).trim();
-      filters.$or = [{ name: { $regex: keyword, $options: "i" } }, { ownerName: { $regex: keyword, $options: "i" } }];
+      filters.$or = [
+        { name: { $regex: keyword, $options: "i" } },
+        { ownerName: { $regex: keyword, $options: "i" } },
+      ];
     }
 
     const [items, totalCount] = await Promise.all([
       GymModel.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      GymModel.countDocuments(filters)
+      GymModel.countDocuments(filters),
     ]);
 
     return { totalCount, page, limit, items };
@@ -115,7 +118,7 @@ export const adminCore = {
       phone: String(payload.phone || ""),
       passwordHash: hashPassword(ownerPassword),
       role: "gym_owner",
-      isActive: true
+      isActive: true,
     });
 
     const gym = await GymModel.create({
@@ -132,8 +135,8 @@ export const adminCore = {
         startDate,
         expiryDate,
         gracePeriodDays: plan.gracePeriodDays || 0,
-        autoRenewal: true
-      }
+        autoRenewal: true,
+      },
     });
 
     ownerUser.gymId = gym._id;
@@ -146,7 +149,7 @@ export const adminCore = {
       paymentStatus: "pending",
       startDate,
       expiryDate,
-      nextBillingDate: expiryDate
+      nextBillingDate: expiryDate,
     });
 
     await WhatsAppUsageMonthlyModel.findOneAndUpdate(
@@ -159,9 +162,9 @@ export const adminCore = {
         messagesFailed: 0,
         conversationsCount: 0,
         deliveryRate: 0,
-        daily: []
+        daily: [],
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     await logAdminAction(req, "Created Gym", "gym", gym._id.toString(), { planId: plan._id.toString() });
@@ -173,7 +176,7 @@ export const adminCore = {
       ownerEmail,
       ownerDefaultPassword: ownerPassword,
       planId: gym.planId.toString(),
-      status: gym.status
+      status: gym.status,
     };
   },
 
@@ -186,14 +189,14 @@ export const adminCore = {
     const [plan, subscription, currentUsage] = await Promise.all([
       PlanModel.findById(gym.planId).lean(),
       SubscriptionModel.findOne({ gymId: gym._id }).sort({ createdAt: -1 }).lean(),
-      WhatsAppUsageMonthlyModel.findOne({ gymId: gym._id, monthKey: monthKeyFromDate(new Date()) }).lean()
+      WhatsAppUsageMonthlyModel.findOne({ gymId: gym._id, monthKey: monthKeyFromDate(new Date()) }).lean(),
     ]);
 
     return {
       ...gym,
       plan,
       subscription,
-      whatsappUsage: currentUsage
+      whatsappUsage: currentUsage,
     };
   },
 
@@ -221,12 +224,12 @@ export const adminCore = {
       await SubscriptionModel.findOneAndUpdate(
         { gymId: gym._id },
         { planId: plan._id },
-        { sort: { createdAt: -1 } }
+        { sort: { createdAt: -1 } },
       );
       await WhatsAppUsageMonthlyModel.findOneAndUpdate(
         { gymId: gym._id, monthKey: monthKeyFromDate(new Date()) },
         { $set: { planLimit: plan.whatsappLimit } },
-        { upsert: true }
+        { upsert: true },
       );
     }
 
@@ -272,7 +275,7 @@ export const adminCore = {
     const updatedUsage = await WhatsAppUsageMonthlyModel.findOneAndUpdate(
       { gymId: gym._id, monthKey: monthKeyFromDate(new Date()) },
       { $set: { messagesUsed: 0, messagesFailed: 0, conversationsCount: 0, deliveryRate: 0, daily: [] } },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     ).lean();
 
     await logAdminAction(req, "Reset WhatsApp Usage", "gym", id);
@@ -292,11 +295,11 @@ export const adminCore = {
       price: Number(payload.price || 0),
       maxMembers: Number(payload.maxMembers || 0),
       whatsappLimit: Number(payload.whatsappLimit || 0),
-      features: Array.isArray(payload.features) ? payload.features.map((value) => String(value)) : [],
+      features: Array.isArray(payload.features) ? payload.features.map(value => String(value)) : [],
       active: payload.active !== undefined ? Boolean(payload.active) : true,
       providerPlanId: payload.providerPlanId ? String(payload.providerPlanId) : undefined,
       trialDays: payload.trialDays !== undefined ? Number(payload.trialDays) : undefined,
-      gracePeriodDays: payload.gracePeriodDays !== undefined ? Number(payload.gracePeriodDays) : undefined
+      gracePeriodDays: payload.gracePeriodDays !== undefined ? Number(payload.gracePeriodDays) : undefined,
     });
 
     await logAdminAction(req, "Created Plan", "plan", plan._id.toString());
@@ -307,14 +310,16 @@ export const adminCore = {
     const payload = (rawPayload || {}) as Record<string, unknown>;
     const updatePayload: Record<string, unknown> = {};
 
-    ["name", "billing", "providerPlanId"].forEach((key) => {
+    ["name", "billing", "providerPlanId"].forEach(key => {
       if (payload[key] !== undefined) updatePayload[key] = String(payload[key]);
     });
-    ["price", "maxMembers", "whatsappLimit", "trialDays", "gracePeriodDays"].forEach((key) => {
+    ["price", "maxMembers", "whatsappLimit", "trialDays", "gracePeriodDays"].forEach(key => {
       if (payload[key] !== undefined) updatePayload[key] = Number(payload[key]);
     });
     if (payload.features !== undefined) {
-      updatePayload.features = Array.isArray(payload.features) ? payload.features.map((item) => String(item)) : [];
+      updatePayload.features = Array.isArray(payload.features)
+        ? payload.features.map(item => String(item))
+        : [];
     }
     if (payload.active !== undefined) updatePayload.active = Boolean(payload.active);
 
@@ -335,8 +340,14 @@ export const adminCore = {
     if (query.paymentStatus) filters.paymentStatus = String(query.paymentStatus);
 
     const [items, totalCount] = await Promise.all([
-      SubscriptionModel.find(filters).populate("gymId").populate("planId").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      SubscriptionModel.countDocuments(filters)
+      SubscriptionModel.find(filters)
+        .populate("gymId")
+        .populate("planId")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      SubscriptionModel.countDocuments(filters),
     ]);
 
     return { totalCount, page, limit, items };
@@ -353,10 +364,10 @@ export const adminCore = {
         {
           $group: {
             _id: { year: { $year: "$paidAt" }, month: { $month: "$paidAt" } },
-            revenue: { $sum: "$amount" }
-          }
+            revenue: { $sum: "$amount" },
+          },
         },
-        { $sort: { "_id.year": 1, "_id.month": 1 } }
+        { $sort: { "_id.year": 1, "_id.month": 1 } },
       ]),
       SubscriptionPaymentModel.aggregate([
         { $match: { status: "success" } },
@@ -365,8 +376,8 @@ export const adminCore = {
             from: "subscriptions",
             localField: "subscriptionId",
             foreignField: "_id",
-            as: "subscription"
-          }
+            as: "subscription",
+          },
         },
         { $unwind: "$subscription" },
         {
@@ -374,31 +385,31 @@ export const adminCore = {
             from: "plans",
             localField: "subscription.planId",
             foreignField: "_id",
-            as: "plan"
-          }
+            as: "plan",
+          },
         },
         { $unwind: "$plan" },
         {
           $group: {
             _id: "$plan.name",
             revenue: { $sum: "$amount" },
-            payments: { $sum: 1 }
-          }
+            payments: { $sum: 1 },
+          },
         },
-        { $sort: { revenue: -1 } }
-      ])
+        { $sort: { revenue: -1 } },
+      ]),
     ]);
 
     return {
-      monthlyRevenue: monthlyRevenue.map((row) => ({
+      monthlyRevenue: monthlyRevenue.map(row => ({
         month: `${row._id.year}-${String(row._id.month).padStart(2, "0")}`,
-        revenue: row.revenue
+        revenue: row.revenue,
       })),
-      revenueByPlan: planRevenue.map((row) => ({
+      revenueByPlan: planRevenue.map(row => ({
         plan: row._id,
         revenue: row.revenue,
-        count: row.payments
-      }))
+        count: row.payments,
+      })),
     };
   },
 
@@ -418,7 +429,7 @@ export const adminCore = {
       tokenEncrypted: String(payload.tokenEncrypted || ""),
       assignedGymId: assignedGymId || null,
       qualityRating: payload.qualityRating ? String(payload.qualityRating) : undefined,
-      isActive: payload.isActive !== undefined ? Boolean(payload.isActive) : true
+      isActive: payload.isActive !== undefined ? Boolean(payload.isActive) : true,
     });
 
     await logAdminAction(req, "Created WhatsApp Line", "whatsapp_line", line._id.toString());
@@ -428,7 +439,7 @@ export const adminCore = {
   async updateWhatsAppPhone(id: string, rawPayload: unknown, req?: Request) {
     const payload = (rawPayload || {}) as Record<string, unknown>;
     const updatePayload: Record<string, unknown> = {};
-    ["phone", "phoneNumberId", "wabaId", "tokenEncrypted", "qualityRating"].forEach((key) => {
+    ["phone", "phoneNumberId", "wabaId", "tokenEncrypted", "qualityRating"].forEach(key => {
       if (payload[key] !== undefined) updatePayload[key] = String(payload[key]);
     });
     if (payload.isActive !== undefined) updatePayload.isActive = Boolean(payload.isActive);
@@ -462,7 +473,7 @@ export const adminCore = {
 
     const [items, totalCount] = await Promise.all([
       ActivityLogModel.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      ActivityLogModel.countDocuments(filters)
+      ActivityLogModel.countDocuments(filters),
     ]);
 
     return { totalCount, page, limit, items };
@@ -482,10 +493,10 @@ export const adminCore = {
 
     const announcement = await AnnouncementModel.create({
       message: String(payload.message || ""),
-      targetGymIds: payload.targetGymIds === "all" ? "all" : (payload.targetGymIds || []),
+      targetGymIds: payload.targetGymIds === "all" ? "all" : payload.targetGymIds || [],
       sentBy: new Types.ObjectId(actorUserId),
       sentAt: new Date(),
-      channel: payload.channel ? String(payload.channel) : "in_app"
+      channel: payload.channel ? String(payload.channel) : "in_app",
     });
 
     await logAdminAction(req, "Created Announcement", "announcement", announcement._id.toString());
@@ -503,13 +514,13 @@ export const adminCore = {
       filters.$or = [
         { name: { $regex: keyword, $options: "i" } },
         { gymName: { $regex: keyword, $options: "i" } },
-        { city: { $regex: keyword, $options: "i" } }
+        { city: { $regex: keyword, $options: "i" } },
       ];
     }
 
     const [items, totalCount] = await Promise.all([
       EnquiryModel.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      EnquiryModel.countDocuments(filters)
+      EnquiryModel.countDocuments(filters),
     ]);
     return { totalCount, page, limit, items };
   },
@@ -527,8 +538,8 @@ export const adminCore = {
 
     const [items, totalCount] = await Promise.all([
       SupportTicketModel.find(filters).sort({ lastUpdatedAt: -1 }).skip(skip).limit(limit).lean(),
-      SupportTicketModel.countDocuments(filters)
+      SupportTicketModel.countDocuments(filters),
     ]);
     return { totalCount, page, limit, items };
-  }
+  },
 };

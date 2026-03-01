@@ -4,7 +4,7 @@ import { fail } from "../common/utils/http";
 export const requireBodyKeys = (...keys: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const body = req.body || {};
-    const missing = keys.filter((key) => {
+    const missing = keys.filter(key => {
       const value = body[key];
       return value === undefined || value === null || value === "";
     });
@@ -14,7 +14,7 @@ export const requireBodyKeys = (...keys: string[]) => {
         res,
         400,
         "Validation failed",
-        missing.map((field) => ({ field, message: `${field} is required` }))
+        missing.map(field => ({ field, message: `${field} is required` })),
       );
       return;
     }

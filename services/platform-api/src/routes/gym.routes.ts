@@ -123,7 +123,11 @@ gymRoutes.get("/dashboard/stats", asyncHandler(gymController.dashboardStats));
 gymRoutes.get("/dashboard/growth", asyncHandler(gymController.dashboardGrowth));
 
 gymRoutes.get("/members", asyncHandler(gymController.listMembers));
-gymRoutes.post("/members", requireBodyKeys("name", "phone", "plan", "fee"), asyncHandler(gymController.createMember));
+gymRoutes.post(
+  "/members",
+  requireBodyKeys("name", "phone", "plan", "fee"),
+  asyncHandler(gymController.createMember),
+);
 gymRoutes.get("/members/:id", requireObjectIdParam("id"), asyncHandler(gymController.getMemberById));
 gymRoutes.patch("/members/:id", requireObjectIdParam("id"), asyncHandler(gymController.updateMember));
 gymRoutes.delete("/members/:id", requireObjectIdParam("id"), asyncHandler(gymController.deleteMember));
@@ -132,9 +136,13 @@ gymRoutes.get("/payments", asyncHandler(gymController.listPayments));
 gymRoutes.post(
   "/payments",
   requireBodyKeys("memberId", "amount", "paidDate", "monthLabel", "method"),
-  asyncHandler(gymController.createPayment)
+  asyncHandler(gymController.createPayment),
 );
 gymRoutes.get("/payments/pending", asyncHandler(gymController.pendingPayments));
 
 gymRoutes.get("/billing", asyncHandler(gymController.billingSummary));
-gymRoutes.post("/support", requireBodyKeys("subject", "message"), asyncHandler(gymController.createSupportTicket));
+gymRoutes.post(
+  "/support",
+  requireBodyKeys("subject", "message"),
+  asyncHandler(gymController.createSupportTicket),
+);

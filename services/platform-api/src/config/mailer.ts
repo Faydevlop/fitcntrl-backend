@@ -16,7 +16,7 @@ let nodemailerModule: null | { createTransport: (options: unknown) => MailTransp
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   nodemailerModule = require("nodemailer");
-} catch (_error) {
+} catch {
   nodemailerModule = null;
 }
 
@@ -27,8 +27,8 @@ export const mailer = hasSmtpConfig
       secure: env.smtpSecure,
       auth: {
         user: env.smtpUser,
-        pass: env.smtpPass
-      }
+        pass: env.smtpPass,
+      },
     })
   : null;
 

@@ -22,20 +22,20 @@ const start = async (): Promise<void> => {
     startReportWorker(),
     startCommandWorker(),
     startRetryWorker(),
-    startOutboundWorker()
+    startOutboundWorker(),
   ];
 
   server = app.listen(env.port, () => {
     logger.info("automation-service started", {
       port: env.port,
-      env: env.nodeEnv
+      env: env.nodeEnv,
     });
   });
 };
 
-start().catch((error) => {
+start().catch(error => {
   logger.error("automation-service failed to start", {
-    error: (error as Error).message
+    error: (error as Error).message,
   });
   process.exit(1);
 });
@@ -52,9 +52,13 @@ const shutdown = async (signal: string): Promise<void> => {
 
   try {
     if (server) {
-      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await new Promise<void>(resolve => server.close(() => resolve()));
     }
-    await Promise.allSettled([...workers.map((worker) => worker.close()), disconnectRedis(), disconnectMongo()]);
+    await Promise.allSettled([
+      ...workers.map(worker => worker.close()),
+      disconnectRedis(),
+      disconnectMongo(),
+    ]);
     logger.info("automation-service shutdown complete");
   } catch {
     logger.error("automation-service shutdown error");

@@ -8,14 +8,14 @@ export const redis = new Redis({
   username: env.redisUsername,
   password: env.redisPassword,
   ...(env.redisTls ? { tls: {} } : {}),
-  maxRetriesPerRequest: null
+  maxRetriesPerRequest: null,
 });
 
 redis.on("connect", () => {
   logger.info("Redis connected successfully", { host: env.redisHost, port: env.redisPort });
 });
 
-redis.on("error", (err) => {
+redis.on("error", err => {
   logger.error("Redis connection error", { error: err.message });
 });
 

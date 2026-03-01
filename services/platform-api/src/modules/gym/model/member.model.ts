@@ -31,9 +31,9 @@ const memberSchema = new Schema<MemberDocument>(
     paymentStatus: { type: String, enum: ["paid", "pending"], default: "pending" },
     notes: { type: String, trim: true },
     lastPaymentDate: { type: Date },
-    lastPaymentMethod: { type: String, enum: ["cash", "upi", "card", "online"] }
+    lastPaymentMethod: { type: String, enum: ["cash", "upi", "card", "online"] },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 memberSchema.index({ gymId: 1, phone: 1 }, { unique: true });

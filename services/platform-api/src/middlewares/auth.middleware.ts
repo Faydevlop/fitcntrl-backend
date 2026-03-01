@@ -27,7 +27,7 @@ export const requireAuthenticated = (req: Request, res: Response, next: NextFunc
     token,
     role: payload.role as UserRole,
     userId: payload.sub,
-    gymId: payload.gymId
+    gymId: payload.gymId,
   };
 
   if (payload.gymId && !req.header("x-gym-id")) {

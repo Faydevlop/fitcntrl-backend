@@ -17,9 +17,9 @@ const announcementSchema = new Schema<AnnouncementDocument>(
     targetGymIds: { type: Schema.Types.Mixed, required: true },
     sentBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     sentAt: { type: Date, required: true },
-    channel: { type: String, enum: ["in_app", "whatsapp"], required: true, default: "in_app" }
+    channel: { type: String, enum: ["in_app", "whatsapp"], required: true, default: "in_app" },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 announcementSchema.index({ sentAt: -1 });

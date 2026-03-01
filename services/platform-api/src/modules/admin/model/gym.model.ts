@@ -43,13 +43,13 @@ const gymSchema = new Schema<GymDocument>(
       type: String,
       enum: ["active", "grace_period", "frozen", "suspended"],
       required: true,
-      default: "active"
+      default: "active",
     },
     waMode: {
       type: String,
       enum: ["shared", "dedicated"],
       default: "shared",
-      required: true
+      required: true,
     },
     upiId: { type: String, trim: true },
     gymDisplayName: { type: String, trim: true },
@@ -57,17 +57,17 @@ const gymSchema = new Schema<GymDocument>(
       startDate: { type: Date, required: true },
       expiryDate: { type: Date, required: true },
       gracePeriodDays: { type: Number, min: 0 },
-      autoRenewal: { type: Boolean, default: true }
+      autoRenewal: { type: Boolean, default: true },
     },
     memberCounts: {
       total: { type: Number, default: 0, min: 0 },
       active: { type: Number, default: 0, min: 0 },
       paused: { type: Number, default: 0, min: 0 },
       expired: { type: Number, default: 0, min: 0 },
-      blacklisted: { type: Number, default: 0, min: 0 }
-    }
+      blacklisted: { type: Number, default: 0, min: 0 },
+    },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 gymSchema.index({ status: 1 });

@@ -7,34 +7,34 @@ export const swaggerSpec = swaggerJSDoc({
     info: {
       title: "Gym Platform API",
       version: "1.0.0",
-      description: "CRUD and dashboard APIs for admin and gym owner users."
+      description: "CRUD and dashboard APIs for admin and gym owner users.",
     },
     servers: [
       {
-        url: `http://localhost:${env.port}`
-      }
+        url: `http://localhost:${env.port}`,
+      },
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
           type: "http",
           scheme: "bearer",
-          bearerFormat: "JWT"
-        }
+          bearerFormat: "JWT",
+        },
       },
       headers: {
         XRequestId: {
           description: "Unique request correlation id.",
-          schema: { type: "string" }
+          schema: { type: "string" },
         },
         XResponseTime: {
           description: "Server-side processing latency in milliseconds.",
-          schema: { type: "string", example: "24ms" }
+          schema: { type: "string", example: "24ms" },
         },
         XEnvironment: {
           description: "Environment that produced this response.",
-          schema: { type: "string", example: "development" }
-        }
+          schema: { type: "string", example: "development" },
+        },
       },
       schemas: {
         ApiEnvelope: {
@@ -44,11 +44,11 @@ export const swaggerSpec = swaggerJSDoc({
               type: "object",
               properties: {
                 success: { type: "boolean" },
-                message: { type: "string" }
-              }
+                message: { type: "string" },
+              },
             },
-            data: {}
-          }
+            data: {},
+          },
         },
         ApiErrorEnvelope: {
           type: "object",
@@ -57,8 +57,8 @@ export const swaggerSpec = swaggerJSDoc({
               type: "object",
               properties: {
                 success: { type: "boolean", example: false },
-                message: { type: "string", example: "Validation failed" }
-              }
+                message: { type: "string", example: "Validation failed" },
+              },
             },
             errors: {
               type: "array",
@@ -66,12 +66,12 @@ export const swaggerSpec = swaggerJSDoc({
                 type: "object",
                 properties: {
                   field: { type: "string", example: "planName" },
-                  message: { type: "string", example: "Plan name is required" }
-                }
-              }
-            }
-          }
-        }
+                  message: { type: "string", example: "Plan name is required" },
+                },
+              },
+            },
+          },
+        },
       },
       responses: {
         UnauthorizedError: {
@@ -79,23 +79,23 @@ export const swaggerSpec = swaggerJSDoc({
           content: {
             "application/json": {
               schema: {
-                $ref: "#/components/schemas/ApiErrorEnvelope"
-              }
-            }
-          }
+                $ref: "#/components/schemas/ApiErrorEnvelope",
+              },
+            },
+          },
         },
         ForbiddenError: {
           description: "Insufficient permission.",
           content: {
             "application/json": {
               schema: {
-                $ref: "#/components/schemas/ApiErrorEnvelope"
-              }
-            }
-          }
-        }
-      }
-    }
+                $ref: "#/components/schemas/ApiErrorEnvelope",
+              },
+            },
+          },
+        },
+      },
+    },
   },
-  apis: ["src/routes/*.ts"]
+  apis: ["src/routes/*.ts"],
 });

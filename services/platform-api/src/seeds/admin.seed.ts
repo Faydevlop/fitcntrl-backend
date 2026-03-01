@@ -5,40 +5,40 @@ import { logger } from "../common/logger/app-logger";
 import { connectMongo, disconnectMongo } from "../bootstrap/mongo";
 
 export const seedAdmin = async () => {
-    try {
-        const adminEmail = adminConfig.adminEmail;
-        const adminPassword = adminConfig.adminPassword;
+  try {
+    const adminEmail = adminConfig.adminEmail;
+    const adminPassword = adminConfig.adminPassword;
 
-        const existingAdmin = await UserModel.findOne({ email: adminEmail });
-        if (existingAdmin) {
-            logger.info("Admin user already exists, skipping seed.");
-            return;
-        }
-
-        const passwordHash = await hashPasswordBcrypt(adminPassword);
-
-        await UserModel.create({
-            email: adminEmail,
-            passwordHash,
-            role: "admin",
-            isActive: true
-        });
-
-        logger.info("Admin user seeded successfully", { email: adminEmail });
-    } catch (error) {
-        logger.error("Error seeding admin user", { error: (error as Error).message });
+    const existingAdmin = await UserModel.findOne({ email: adminEmail });
+    if (existingAdmin) {
+      logger.info("Admin user already exists, skipping seed.");
+      return;
     }
+
+    const passwordHash = await hashPasswordBcrypt(adminPassword);
+
+    await UserModel.create({
+      email: adminEmail,
+      passwordHash,
+      role: "admin",
+      isActive: true,
+    });
+
+    logger.info("Admin user seeded successfully", { email: adminEmail });
+  } catch (error) {
+    logger.error("Error seeding admin user", { error: (error as Error).message });
+  }
 };
 
 if (require.main === module) {
-    const runSeed = async () => {
-        await connectMongo();
-        await seedAdmin();
-        await disconnectMongo();
-        process.exit(0);
-    };
-    runSeed().catch((err) => {
-        logger.error("Seed script failed", { error: err.message });
-        process.exit(1);
-    });
+  const runSeed = async () => {
+    await connectMongo();
+    await seedAdmin();
+    await disconnectMongo();
+    process.exit(0);
+  };
+  runSeed().catch(err => {
+    logger.error("Seed script failed", { error: err.message });
+    process.exit(1);
+  });
 }

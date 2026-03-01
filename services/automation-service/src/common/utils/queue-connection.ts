@@ -5,5 +5,5 @@ export const queueConnection = {
   port: env.redisPort,
   ...(env.redisUsername ? { username: env.redisUsername } : {}),
   ...(env.redisPassword ? { password: env.redisPassword } : {}),
-  ...(env.redisTls ? { tls: {} } : {})
+  ...(env.redisTls ? { tls: {} } : {}),
 };

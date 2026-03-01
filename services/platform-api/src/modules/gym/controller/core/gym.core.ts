@@ -56,7 +56,7 @@ const logGymAction = async (
   action: string,
   entityType: string,
   entityId?: string,
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown>,
 ): Promise<void> => {
   const userId = auth?.userId;
   if (!userId || !Types.ObjectId.isValid(userId)) {
@@ -70,14 +70,14 @@ const logGymAction = async (
     action,
     entityType,
     entityId,
-    meta
+    meta,
   });
 };
 
 const refreshMemberCounts = async (gymId: Types.ObjectId): Promise<void> => {
   const grouped = await MemberModel.aggregate([
     { $match: { gymId } },
-    { $group: { _id: "$status", count: { $sum: 1 } } }
+    { $group: { _id: "$status", count: { $sum: 1 } } },
   ]);
 
   const counts = {
@@ -85,10 +85,10 @@ const refreshMemberCounts = async (gymId: Types.ObjectId): Promise<void> => {
     active: 0,
     paused: 0,
     expired: 0,
-    blacklisted: 0
+    blacklisted: 0,
   };
 
-  grouped.forEach((row) => {
+  grouped.forEach(row => {
     const key = String(row._id) as keyof typeof counts;
     if (counts[key] !== undefined) {
       counts[key] = row.count;
@@ -115,13 +115,19 @@ export const gymCore = {
       pendingMembers,
       usage,
       gym,
-      subscription
+      subscription,
     ] = await Promise.all([
       MemberModel.countDocuments({ gymId }),
       MemberModel.countDocuments({ gymId, status: { $in: ["active", "paused"] } }),
       MemberModel.countDocuments({ gymId, paymentStatus: "pending" }),
-      MemberModel.aggregate([{ $match: { gymId, paymentStatus: "pending" } }, { $group: { _id: null, amount: { $sum: "$fee" } } }]),
-      MemberPaymentModel.aggregate([{ $match: { gymId } }, { $group: { _id: null, amount: { $sum: "$amount" } } }]),
+      MemberModel.aggregate([
+        { $match: { gymId, paymentStatus: "pending" } },
+        { $group: { _id: null, amount: { $sum: "$fee" } } },
+      ]),
+      MemberPaymentModel.aggregate([
+        { $match: { gymId } },
+        { $group: { _id: null, amount: { $sum: "$amount" } } },
+      ]),
       MemberModel.find({ gymId, paymentStatus: "pending" })
         .sort({ nextDueDate: 1 })
         .limit(5)
@@ -129,7 +135,7 @@ export const gymCore = {
         .lean(),
       WhatsAppUsageMonthlyModel.findOne({ gymId, monthKey }).lean(),
       GymModel.findById(gymId).lean(),
-      SubscriptionModel.findOne({ gymId }).sort({ createdAt: -1 }).lean()
+      SubscriptionModel.findOne({ gymId }).sort({ createdAt: -1 }).lean(),
     ]);
 
     return {
@@ -141,7 +147,7 @@ export const gymCore = {
       pendingMembers,
       whatsappUsage: usage || null,
       gymStatus: gym?.status || null,
-      subscriptionStatus: subscription?.status || null
+      subscriptionStatus: subscription?.status || null,
     };
   },
 
@@ -160,20 +166,20 @@ export const gymCore = {
         $group: {
           _id: {
             year: { $year: "$joinDate" },
-            month: { $month: "$joinDate" }
+            month: { $month: "$joinDate" },
           },
-          joined: { $sum: 1 }
-        }
+          joined: { $sum: 1 },
+        },
       },
-      { $sort: { "_id.year": 1, "_id.month": 1 } }
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
     ]);
 
     return {
       totalCount: rows.length,
-      items: rows.map((row) => ({
+      items: rows.map(row => ({
         month: `${row._id.year}-${String(row._id.month).padStart(2, "0")}`,
-        joined: row.joined
-      }))
+        joined: row.joined,
+      })),
     };
   },
 
@@ -188,12 +194,15 @@ export const gymCore = {
     if (query.plan) filters.plan = String(query.plan);
     if (query.search) {
       const keyword = String(query.search);
-      filters.$or = [{ name: { $regex: keyword, $options: "i" } }, { phone: { $regex: keyword, $options: "i" } }];
+      filters.$or = [
+        { name: { $regex: keyword, $options: "i" } },
+        { phone: { $regex: keyword, $options: "i" } },
+      ];
     }
 
     const [items, totalCount] = await Promise.all([
       MemberModel.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-      MemberModel.countDocuments(filters)
+      MemberModel.countDocuments(filters),
     ]);
 
     return { totalCount, page, limit, items };
@@ -211,10 +220,12 @@ export const gymCore = {
       plan: String(payload.plan || "monthly"),
       fee: Number(payload.fee || 0),
       joinDate,
-      nextDueDate: payload.nextDueDate ? parseDate(payload.nextDueDate, nextDueByPlan(joinDate, String(payload.plan || "monthly"))) : nextDueByPlan(joinDate, String(payload.plan || "monthly")),
+      nextDueDate: payload.nextDueDate
+        ? parseDate(payload.nextDueDate, nextDueByPlan(joinDate, String(payload.plan || "monthly")))
+        : nextDueByPlan(joinDate, String(payload.plan || "monthly")),
       status: payload.status ? String(payload.status) : "active",
       paymentStatus: payload.paymentStatus ? String(payload.paymentStatus) : "pending",
-      notes: payload.notes ? String(payload.notes) : ""
+      notes: payload.notes ? String(payload.notes) : "",
     });
 
     await refreshMemberCounts(gymId);
@@ -230,7 +241,9 @@ export const gymCore = {
       throw new Error("Member not found");
     }
 
-    const payments = await MemberPaymentModel.find({ gymId, memberId: member._id }).sort({ paidDate: -1 }).lean();
+    const payments = await MemberPaymentModel.find({ gymId, memberId: member._id })
+      .sort({ paidDate: -1 })
+      .lean();
     return { ...member, payments };
   },
 
@@ -246,9 +259,11 @@ export const gymCore = {
     if (payload.phone !== undefined) member.phone = String(payload.phone);
     if (payload.plan !== undefined) member.plan = String(payload.plan) as typeof member.plan;
     if (payload.fee !== undefined) member.fee = Number(payload.fee);
-    if (payload.nextDueDate !== undefined) member.nextDueDate = parseDate(payload.nextDueDate, member.nextDueDate);
+    if (payload.nextDueDate !== undefined)
+      member.nextDueDate = parseDate(payload.nextDueDate, member.nextDueDate);
     if (payload.status !== undefined) member.status = String(payload.status) as typeof member.status;
-    if (payload.paymentStatus !== undefined) member.paymentStatus = String(payload.paymentStatus) as typeof member.paymentStatus;
+    if (payload.paymentStatus !== undefined)
+      member.paymentStatus = String(payload.paymentStatus) as typeof member.paymentStatus;
     if (payload.notes !== undefined) member.notes = String(payload.notes);
 
     await member.save();
@@ -263,7 +278,7 @@ export const gymCore = {
     const member = await MemberModel.findOneAndUpdate(
       { _id: id, gymId },
       { $set: { status: "blacklisted", paymentStatus: "pending" } },
-      { new: true }
+      { new: true },
     ).lean();
     if (!member) {
       throw new Error("Member not found");
@@ -287,16 +302,16 @@ export const gymCore = {
       const keyword = String(query.search);
       const members = await MemberModel.find({
         gymId,
-        $or: [{ name: { $regex: keyword, $options: "i" } }, { phone: { $regex: keyword, $options: "i" } }]
+        $or: [{ name: { $regex: keyword, $options: "i" } }, { phone: { $regex: keyword, $options: "i" } }],
       })
         .select("_id")
         .lean();
-      filters.memberId = { $in: members.map((member) => member._id) };
+      filters.memberId = { $in: members.map(member => member._id) };
     }
 
     const [items, totalCount] = await Promise.all([
       MemberPaymentModel.find(filters).sort({ paidDate: -1 }).skip(skip).limit(limit).lean(),
-      MemberPaymentModel.countDocuments(filters)
+      MemberPaymentModel.countDocuments(filters),
     ]);
 
     return { totalCount, page, limit, items };
@@ -328,7 +343,7 @@ export const gymCore = {
       method: String(payload.method || "cash"),
       isPartial: payload.isPartial !== undefined ? Boolean(payload.isPartial) : false,
       notes: payload.notes ? String(payload.notes) : undefined,
-      receivedByUserId
+      receivedByUserId,
     });
 
     member.paymentStatus = "paid";
@@ -337,7 +352,8 @@ export const gymCore = {
     member.nextDueDate = nextDueByPlan(paidDate, member.plan);
     await member.save();
 
-    const owner = ownerFallback || (await UserModel.findOne({ gymId, role: "gym_owner" }).select("_id").lean());
+    const owner =
+      ownerFallback || (await UserModel.findOne({ gymId, role: "gym_owner" }).select("_id").lean());
     const queuePayload = {
       gymId: gymId.toString(),
       memberId: member._id.toString(),
@@ -348,17 +364,17 @@ export const gymCore = {
       variables: {
         memberName: member.name,
         amount,
-        paidDate: paidDate.toISOString()
+        paidDate: paidDate.toISOString(),
       },
-      correlationId: payment._id.toString()
+      correlationId: payment._id.toString(),
     };
     await waOutboundQueue.add("payment-receipt", queuePayload, {
-      jobId: `payment-receipt:${payment._id.toString()}`
+      jobId: `payment-receipt:${payment._id.toString()}`,
     });
 
     await logGymAction(auth, gymId, "Created Payment", "member_payment", payment._id.toString(), {
       memberId: member._id.toString(),
-      amount
+      amount,
     });
 
     return payment.toObject();
@@ -372,25 +388,28 @@ export const gymCore = {
 
     if (query.search) {
       const keyword = String(query.search);
-      filters.$or = [{ name: { $regex: keyword, $options: "i" } }, { phone: { $regex: keyword, $options: "i" } }];
+      filters.$or = [
+        { name: { $regex: keyword, $options: "i" } },
+        { phone: { $regex: keyword, $options: "i" } },
+      ];
     }
 
     const [items, totalCount] = await Promise.all([
       MemberModel.find(filters).sort({ nextDueDate: 1 }).skip(skip).limit(limit).lean(),
-      MemberModel.countDocuments(filters)
+      MemberModel.countDocuments(filters),
     ]);
 
     return {
       totalCount,
       page,
       limit,
-      items: items.map((member) => ({
+      items: items.map(member => ({
         ...member,
         overdueDays: Math.max(
           0,
-          Math.floor((Date.now() - new Date(member.nextDueDate).getTime()) / (1000 * 60 * 60 * 24))
-        )
-      }))
+          Math.floor((Date.now() - new Date(member.nextDueDate).getTime()) / (1000 * 60 * 60 * 24)),
+        ),
+      })),
     };
   },
 
@@ -401,14 +420,14 @@ export const gymCore = {
       GymModel.findById(gymId).populate("planId").lean(),
       SubscriptionModel.findOne({ gymId }).sort({ createdAt: -1 }).populate("planId").lean(),
       SubscriptionPaymentModel.find({ gymId }).sort({ paidAt: -1 }).limit(20).lean(),
-      WhatsAppUsageMonthlyModel.findOne({ gymId, monthKey: monthKeyFromDate(new Date()) }).lean()
+      WhatsAppUsageMonthlyModel.findOne({ gymId, monthKey: monthKeyFromDate(new Date()) }).lean(),
     ]);
 
     return {
       gym,
       subscription,
       payments,
-      whatsappUsage: usage || null
+      whatsappUsage: usage || null,
     };
   },
 
@@ -429,10 +448,10 @@ export const gymCore = {
       status: "open",
       priority: payload.priority ? String(payload.priority) : "medium",
       replies: [],
-      lastUpdatedAt: new Date()
+      lastUpdatedAt: new Date(),
     });
 
     await logGymAction(auth, gymId, "Created Support Ticket", "support_ticket", ticket._id.toString());
     return ticket.toObject();
-  }
+  },
 };

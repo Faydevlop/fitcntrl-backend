@@ -21,9 +21,9 @@ const whatsappLineSchema = new Schema<WhatsAppLineDocument>(
     tokenEncrypted: { type: String, required: true },
     assignedGymId: { type: Schema.Types.ObjectId, ref: "Gym", default: null, index: true },
     qualityRating: { type: String, trim: true },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 export const WhatsAppLineModel = model<WhatsAppLineDocument>("WhatsAppLine", whatsappLineSchema);

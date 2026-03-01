@@ -16,14 +16,14 @@ const start = async (): Promise<void> => {
   server = app.listen(env.port, () => {
     logger.info("platform-api started", {
       port: env.port,
-      env: env.nodeEnv
+      env: env.nodeEnv,
     });
   });
 };
 
-start().catch((error) => {
+start().catch(error => {
   logger.error("platform-api failed to start", {
-    error: (error as Error).message
+    error: (error as Error).message,
   });
   process.exit(1);
 });
@@ -40,7 +40,7 @@ const shutdown = async (signal: string): Promise<void> => {
 
   try {
     if (server) {
-      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await new Promise<void>(resolve => server.close(() => resolve()));
     }
 
     await Promise.allSettled([disconnectRedis(), disconnectMongo()]);

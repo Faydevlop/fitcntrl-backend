@@ -22,9 +22,9 @@ const userSchema = new Schema<UserDocument>(
     role: { type: String, enum: ["admin", "gym_owner"], required: true },
     gymId: { type: Schema.Types.ObjectId, ref: "Gym" },
     isActive: { type: Boolean, default: true },
-    lastLoginAt: { type: Date }
+    lastLoginAt: { type: Date },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 userSchema.index({ role: 1, gymId: 1 });

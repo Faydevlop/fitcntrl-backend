@@ -5,16 +5,16 @@ import { queueConnection } from "../common/utils/queue-connection";
 export const startRetryWorker = (): Worker => {
   return new Worker(
     "wa.retry",
-    async (job) => {
+    async job => {
       const messageLogId = job.data?.messageLogId as string | undefined;
       const errorMessage = String(job.data?.error || "retry failed");
       if (messageLogId) {
         await WhatsAppMessageLogModel.findByIdAndUpdate(messageLogId, {
-          $set: { status: "failed", error: errorMessage }
+          $set: { status: "failed", error: errorMessage },
         });
       }
       return { processed: true };
     },
-    { connection: queueConnection, prefix: "gymflow" }
+    { connection: queueConnection, prefix: "gymflow" },
   );
 };

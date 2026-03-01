@@ -22,20 +22,20 @@ const subscriptionSchema = new Schema<SubscriptionDocument>(
     status: {
       type: String,
       enum: ["active", "past_due", "cancelled", "trialing"],
-      required: true
+      required: true,
     },
     paymentStatus: {
       type: String,
       enum: ["paid", "pending", "overdue"],
-      required: true
+      required: true,
     },
     startDate: { type: Date, required: true },
     expiryDate: { type: Date, required: true },
     nextBillingDate: { type: Date },
     lastPaymentDate: { type: Date },
-    providerSubscriptionId: { type: String, trim: true }
+    providerSubscriptionId: { type: String, trim: true },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 subscriptionSchema.index({ status: 1, paymentStatus: 1 });

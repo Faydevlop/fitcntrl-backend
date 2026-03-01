@@ -26,7 +26,7 @@ const toCommand = (text?: string): "hi" | "stats" | "pending" | null => {
 const buildOwnerSummary = async (ownerPhone: string): Promise<{ gymId?: string; message: string }> => {
   const owner = await UserRefModel.findOne({
     role: "gym_owner",
-    phone: { $in: [ownerPhone, ownerPhone.replace(/^\+/, ""), `+${ownerPhone.replace(/^\+/, "")}`] }
+    phone: { $in: [ownerPhone, ownerPhone.replace(/^\+/, ""), `+${ownerPhone.replace(/^\+/, "")}`] },
   }).lean();
 
   if (!owner?.gymId) {
@@ -35,14 +35,14 @@ const buildOwnerSummary = async (ownerPhone: string): Promise<{ gymId?: string; 
 
   const pending = await MemberRefModel.aggregate([
     { $match: { gymId: owner.gymId, paymentStatus: "pending" } },
-    { $group: { _id: null, totalCount: { $sum: 1 }, totalAmount: { $sum: "$fee" } } }
+    { $group: { _id: null, totalCount: { $sum: 1 }, totalAmount: { $sum: "$fee" } } },
   ]);
 
   const totalCount = pending[0]?.totalCount || 0;
   const totalAmount = pending[0]?.totalAmount || 0;
   return {
     gymId: owner.gymId.toString(),
-    message: `Pending members: ${totalCount}, Pending amount: ${totalAmount}`
+    message: `Pending members: ${totalCount}, Pending amount: ${totalAmount}`,
   };
 };
 
@@ -60,9 +60,9 @@ export const webhookCore = {
         eventId,
         signatureValid: true,
         payload: input,
-        status: "received"
+        status: "received",
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true },
     );
 
     let processedMessages = 0;
@@ -86,8 +86,8 @@ export const webhookCore = {
             payload: {
               from: senderPhone,
               body,
-              raw: message
-            }
+              raw: message,
+            },
           });
 
           await waCommandQueue.add(
@@ -96,9 +96,9 @@ export const webhookCore = {
               from: senderPhone,
               messageText: body,
               providerMessageId: message.id || inboundLog._id.toString(),
-              receivedAt: message.timestamp || new Date().toISOString()
+              receivedAt: message.timestamp || new Date().toISOString(),
             },
-            { jobId: `wa-command:${inboundLog._id.toString()}` }
+            { jobId: `wa-command:${inboundLog._id.toString()}` },
           );
 
           if (command) {
@@ -109,22 +109,25 @@ export const webhookCore = {
               templateName: "owner_command_response",
               variables: {
                 command,
-                summary: summary.message
-              }
+                summary: summary.message,
+              },
             };
 
             const outboundLog = await WhatsAppMessageLogModel.create({
-              gymId: summary.gymId && Types.ObjectId.isValid(summary.gymId) ? new Types.ObjectId(summary.gymId) : undefined,
+              gymId:
+                summary.gymId && Types.ObjectId.isValid(summary.gymId)
+                  ? new Types.ObjectId(summary.gymId)
+                  : undefined,
               direction: "outbound",
               type: "command_response",
               status: "queued",
               templateName: "owner_command_response",
-              payload: outboundPayload
+              payload: outboundPayload,
             });
 
             await waOutboundQueue.add("send-message", {
               ...outboundPayload,
-              messageLogId: outboundLog._id.toString()
+              messageLogId: outboundLog._id.toString(),
             });
           }
         }
@@ -137,13 +140,18 @@ export const webhookCore = {
 
     return {
       eventId,
-      processedMessages
+      processedMessages,
     };
   },
-  verifyMetaToken(mode: string | undefined, token: string | undefined, challenge: string | undefined, expectedToken: string) {
+  verifyMetaToken(
+    mode: string | undefined,
+    token: string | undefined,
+    challenge: string | undefined,
+    expectedToken: string,
+  ) {
     if (mode !== "subscribe" || token !== expectedToken) {
       return null;
     }
     return challenge || "verified";
-  }
+  },
 };

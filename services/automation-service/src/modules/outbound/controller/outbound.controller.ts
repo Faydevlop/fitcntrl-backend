@@ -21,9 +21,9 @@ export const outboundController = {
       {
         provider: "meta",
         redisReady,
-        mongoReady
+        mongoReady,
       },
-      "WhatsApp status fetched"
+      "WhatsApp status fetched",
     );
-  }
+  },
 };

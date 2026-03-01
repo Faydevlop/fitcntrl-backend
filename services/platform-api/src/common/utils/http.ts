@@ -11,15 +11,15 @@ const sendSuccessEnvelope = (
   res: Response,
   statusCode: number,
   message: string,
-  data?: unknown
+  data?: unknown,
 ): Response => {
   applyResponseMeta(req, res);
   return res.status(statusCode).json({
     meta: {
       success: true,
-      message
+      message,
     },
-    data: data ?? null
+    data: data ?? null,
   });
 };
 
@@ -28,15 +28,15 @@ const sendErrorEnvelope = (
   res: Response,
   statusCode: number,
   message: string,
-  errors?: ApiFieldError[]
+  errors?: ApiFieldError[],
 ): Response => {
   applyResponseMeta(req, res);
   return res.status(statusCode).json({
     meta: {
       success: false,
-      message
+      message,
     },
-    errors: errors ?? []
+    errors: errors ?? [],
   });
 };
 
@@ -52,7 +52,7 @@ export const fail = (
   res: Response,
   statusCode: number,
   message: string,
-  errors?: ApiFieldError[]
+  errors?: ApiFieldError[],
 ): Response => {
   return sendErrorEnvelope(res.req, res, statusCode, message, errors);
 };

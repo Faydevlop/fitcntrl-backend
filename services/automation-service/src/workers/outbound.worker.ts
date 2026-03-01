@@ -5,19 +5,19 @@ import { queueConnection } from "../common/utils/queue-connection";
 export const startOutboundWorker = (): Worker => {
   return new Worker(
     "wa.outbound",
-    async (job) => {
+    async job => {
       const messageLogId = job.data?.messageLogId as string | undefined;
       if (messageLogId) {
         await WhatsAppMessageLogModel.findByIdAndUpdate(messageLogId, {
           $set: {
             status: "sent",
             sentAt: new Date(),
-            providerMessageId: `mock-${Date.now()}`
-          }
+            providerMessageId: `mock-${Date.now()}`,
+          },
         });
       }
       return { processed: true };
     },
-    { connection: queueConnection, prefix: "gymflow" }
+    { connection: queueConnection, prefix: "gymflow" },
   );
 };

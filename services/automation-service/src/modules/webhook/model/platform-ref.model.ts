@@ -34,9 +34,9 @@ const userRefSchema = new Schema<UserRefDocument>(
     phone: String,
     role: String,
     gymId: Schema.Types.ObjectId,
-    isActive: Boolean
+    isActive: Boolean,
   },
-  { versionKey: false }
+  { versionKey: false },
 );
 
 const memberRefSchema = new Schema<MemberRefDocument>(
@@ -46,9 +46,9 @@ const memberRefSchema = new Schema<MemberRefDocument>(
     phone: String,
     fee: Number,
     paymentStatus: String,
-    nextDueDate: Date
+    nextDueDate: Date,
   },
-  { versionKey: false }
+  { versionKey: false },
 );
 
 const gymRefSchema = new Schema<GymRefDocument>(
@@ -57,14 +57,15 @@ const gymRefSchema = new Schema<GymRefDocument>(
     ownerName: String,
     phone: String,
     status: String,
-    waMode: String
+    waMode: String,
   },
-  { versionKey: false }
+  { versionKey: false },
 );
 
 export const UserRefModel: Model<UserRefDocument> =
   (models.UserRef as Model<UserRefDocument>) || model<UserRefDocument>("UserRef", userRefSchema, "users");
 export const MemberRefModel: Model<MemberRefDocument> =
-  (models.MemberRef as Model<MemberRefDocument>) || model<MemberRefDocument>("MemberRef", memberRefSchema, "members");
+  (models.MemberRef as Model<MemberRefDocument>) ||
+  model<MemberRefDocument>("MemberRef", memberRefSchema, "members");
 export const GymRefModel: Model<GymRefDocument> =
   (models.GymRef as Model<GymRefDocument>) || model<GymRefDocument>("GymRef", gymRefSchema, "gyms");

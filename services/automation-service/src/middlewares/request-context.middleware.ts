@@ -5,7 +5,7 @@ export const attachRequestContext = (req: Request, res: Response, next: NextFunc
   const requestId = (req.header("x-request-id") || randomUUID()).trim();
   (req as any).requestContext = {
     requestId,
-    startedAt: Date.now()
+    startedAt: Date.now(),
   };
   res.setHeader("x-request-id", requestId);
   next();

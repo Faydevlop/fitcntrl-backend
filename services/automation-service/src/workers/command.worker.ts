@@ -4,12 +4,12 @@ import { queueConnection } from "../common/utils/queue-connection";
 export const startCommandWorker = (): Worker => {
   return new Worker(
     "wa.command",
-    async (job) => {
+    async job => {
       return {
         processed: true,
-        from: job.data?.from || null
+        from: job.data?.from || null,
       };
     },
-    { connection: queueConnection, prefix: "gymflow" }
+    { connection: queueConnection, prefix: "gymflow" },
   );
 };

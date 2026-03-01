@@ -67,7 +67,7 @@ app.get("/ready", async (_req, res) => {
 
     fail(res, 503, "Platform API is not ready", [
       { field: "mongo", message: mongoReady ? "ok" : "not ready" },
-      { field: "redis", message: redisReady ? "ok" : "not ready" }
+      { field: "redis", message: redisReady ? "ok" : "not ready" },
     ]);
   } catch (error) {
     logger.error("Readiness check failed", { error: (error as Error).message });

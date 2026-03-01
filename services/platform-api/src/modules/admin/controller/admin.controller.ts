@@ -46,13 +46,17 @@ export const adminController = {
     return ok(res, await adminCore.listWhatsAppPhones(), "WhatsApp phones fetched successfully");
   },
   async createWhatsAppPhone(req: Request, res: Response) {
-    return created(res, await adminCore.createWhatsAppPhone(req.body, req), "WhatsApp phone added successfully");
+    return created(
+      res,
+      await adminCore.createWhatsAppPhone(req.body, req),
+      "WhatsApp phone added successfully",
+    );
   },
   async updateWhatsAppPhone(req: Request, res: Response) {
     return ok(
       res,
       await adminCore.updateWhatsAppPhone(req.params.id, req.body, req),
-      "WhatsApp phone updated successfully"
+      "WhatsApp phone updated successfully",
     );
   },
   async listActivityLogs(req: Request, res: Response) {
@@ -62,12 +66,16 @@ export const adminController = {
     return ok(res, await adminCore.listAnnouncements(), "Announcements fetched successfully");
   },
   async createAnnouncement(req: Request, res: Response) {
-    return created(res, await adminCore.createAnnouncement(req.body, req), "Announcement created successfully");
+    return created(
+      res,
+      await adminCore.createAnnouncement(req.body, req),
+      "Announcement created successfully",
+    );
   },
   async listEnquiries(req: Request, res: Response) {
     return ok(res, await adminCore.listEnquiries(req.query), "Enquiries fetched successfully");
   },
   async listOwnerSupport(req: Request, res: Response) {
     return ok(res, await adminCore.listOwnerSupport(req.query), "Owner support tickets fetched successfully");
-  }
+  },
 };

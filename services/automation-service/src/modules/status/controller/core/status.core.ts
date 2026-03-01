@@ -10,8 +10,8 @@ export const statusCore = {
       status: redisReady && mongoReady ? "ok" : "degraded",
       checks: {
         mongo: mongoReady,
-        redis: redisReady
-      }
+        redis: redisReady,
+      },
     };
-  }
+  },
 };

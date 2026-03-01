@@ -64,13 +64,13 @@ whatsappRoutes.post(
   "/send-reminder",
   requireInternalAuth,
   requireBodyKeys("gymId", "memberId"),
-  asyncHandler(outboundController.sendReminder)
+  asyncHandler(outboundController.sendReminder),
 );
 whatsappRoutes.post(
   "/send-report",
   requireInternalAuth,
   requireBodyKeys("gymId", "reportType"),
-  asyncHandler(outboundController.sendReport)
+  asyncHandler(outboundController.sendReport),
 );
 whatsappRoutes.get("/status", requireInternalAuth, asyncHandler(outboundController.status));
 whatsappRoutes.get("/internal/health", requireInternalAuth, asyncHandler(statusController.health));

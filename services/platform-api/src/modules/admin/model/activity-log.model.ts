@@ -22,9 +22,9 @@ const activityLogSchema = new Schema<ActivityLogDocument>(
     entityType: { type: String, required: true, trim: true },
     entityId: { type: String, trim: true },
     meta: { type: Schema.Types.Mixed },
-    ip: { type: String, trim: true }
+    ip: { type: String, trim: true },
   },
-  { timestamps: { createdAt: true, updatedAt: false }, versionKey: false }
+  { timestamps: { createdAt: true, updatedAt: false }, versionKey: false },
 );
 
 activityLogSchema.index({ gymId: 1, createdAt: -1 });

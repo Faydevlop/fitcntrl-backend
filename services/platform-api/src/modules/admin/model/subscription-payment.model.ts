@@ -21,9 +21,9 @@ const subscriptionPaymentSchema = new Schema<SubscriptionPaymentDocument>(
     status: { type: String, enum: ["success", "failed", "pending"], required: true },
     paidAt: { type: Date, required: true },
     providerPaymentId: { type: String, trim: true },
-    invoiceUrl: { type: String, trim: true }
+    invoiceUrl: { type: String, trim: true },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 subscriptionPaymentSchema.index({ subscriptionId: 1, paidAt: -1 });
@@ -31,5 +31,5 @@ subscriptionPaymentSchema.index({ gymId: 1, paidAt: -1 });
 
 export const SubscriptionPaymentModel = model<SubscriptionPaymentDocument>(
   "SubscriptionPayment",
-  subscriptionPaymentSchema
+  subscriptionPaymentSchema,
 );

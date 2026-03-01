@@ -67,11 +67,13 @@ app.get("/ready", async (_req, res) => {
 
     fail(res, 503, "Automation service is not ready", [
       { field: "mongo", message: mongoReady ? "ok" : "not ready" },
-      { field: "redis", message: redisReady ? "ok" : "not ready" }
+      { field: "redis", message: redisReady ? "ok" : "not ready" },
     ]);
   } catch (error) {
     logger.error("Readiness check failed", { error: (error as Error).message });
-    fail(res, 503, "Automation service is not ready", [{ field: "dependency", message: (error as Error).message }]);
+    fail(res, 503, "Automation service is not ready", [
+      { field: "dependency", message: (error as Error).message },
+    ]);
   }
 });
 
