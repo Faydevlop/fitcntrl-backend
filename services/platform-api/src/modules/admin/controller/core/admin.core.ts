@@ -30,7 +30,7 @@ const logAdminAction = async (
   entityId?: string,
   meta?: Record<string, unknown>,
 ): Promise<void> => {
-  const actorUserId = (req as any)?.authContext?.userId;
+  const actorUserId = req?.authContext?.userId;
   if (!actorUserId || !Types.ObjectId.isValid(actorUserId)) {
     return;
   }
