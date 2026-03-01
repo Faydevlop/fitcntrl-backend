@@ -30,7 +30,7 @@ const logAdminAction = async (
   entityId?: string,
   meta?: Record<string, unknown>
 ): Promise<void> => {
-  const actorUserId = req?.authContext?.userId;
+  const actorUserId = (req as any)?.authContext?.userId;
   if (!actorUserId || !Types.ObjectId.isValid(actorUserId)) {
     return;
   }
@@ -41,7 +41,7 @@ const logAdminAction = async (
     action,
     entityType,
     entityId,
-    ip: req.ip,
+    ip: req?.ip,
     meta
   });
 };
@@ -475,7 +475,7 @@ export const adminCore = {
 
   async createAnnouncement(rawPayload: unknown, req?: Request) {
     const payload = (rawPayload || {}) as Record<string, unknown>;
-    const actorUserId = req?.authContext?.userId;
+    const actorUserId = (req as any)?.authContext?.userId;
     if (!actorUserId || !Types.ObjectId.isValid(actorUserId)) {
       throw new Error("Invalid admin context");
     }

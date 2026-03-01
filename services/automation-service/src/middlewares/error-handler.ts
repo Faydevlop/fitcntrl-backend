@@ -9,7 +9,7 @@ export const errorHandler = (
   _next: NextFunction
 ): void => {
   logger.error("Unhandled automation-service error", {
-    requestId: req.requestContext?.requestId,
+    requestId: (req as any).requestContext?.requestId,
     message: err.message
   });
   fail(res, 500, err.message || "Internal server error");

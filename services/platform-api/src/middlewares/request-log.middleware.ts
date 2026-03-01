@@ -6,7 +6,7 @@ export const requestLog = (req: Request, res: Response, next: NextFunction): voi
 
   res.on("finish", () => {
     logger.info("platform-api request completed", {
-      requestId: req.requestContext?.requestId,
+      requestId: (req as any).requestContext?.requestId,
       method: req.method,
       path: req.originalUrl,
       statusCode: res.statusCode,

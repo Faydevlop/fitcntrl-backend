@@ -42,11 +42,24 @@ start().catch((error) => {
 
 const shutdown = async (signal: string): Promise<void> => {
   logger.info("automation-service shutdown requested", { signal });
-  if (server) {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+
+  // Force exit if graceful shutdown takes too long
+  const forceExitTimer = setTimeout(() => {
+    logger.warn("automation-service graceful shutdown timed out, forcing exit");
+    process.exit(1);
+  }, 5000);
+  forceExitTimer.unref();
+
+  try {
+    if (server) {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+    await Promise.allSettled([...workers.map((worker) => worker.close()), disconnectRedis(), disconnectMongo()]);
+    logger.info("automation-service shutdown complete");
+  } catch {
+    logger.error("automation-service shutdown error");
   }
-  await Promise.allSettled([...workers.map((worker) => worker.close()), disconnectRedis(), disconnectMongo()]);
-  logger.info("automation-service shutdown complete");
+
   process.exit(0);
 };
 

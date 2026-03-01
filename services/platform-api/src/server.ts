@@ -5,11 +5,13 @@ import { env } from "./config/env";
 import { verifyDependencies } from "./bootstrap/dependency-check";
 import { logger } from "./common/logger/app-logger";
 import { Server } from "http";
+import { seedAdmin } from "./seeds/admin.seed";
 
 let server: Server;
 const start = async (): Promise<void> => {
   await connectMongo();
   await verifyDependencies();
+  await seedAdmin();
 
   server = app.listen(env.port, () => {
     logger.info("platform-api started", {
@@ -29,12 +31,24 @@ start().catch((error) => {
 const shutdown = async (signal: string): Promise<void> => {
   logger.info("platform-api shutdown requested", { signal });
 
-  if (server) {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+  // Force exit if graceful shutdown takes too long
+  const forceExitTimer = setTimeout(() => {
+    logger.warn("platform-api graceful shutdown timed out, forcing exit");
+    process.exit(1);
+  }, 5000);
+  forceExitTimer.unref();
+
+  try {
+    if (server) {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+
+    await Promise.allSettled([disconnectRedis(), disconnectMongo()]);
+    logger.info("platform-api shutdown complete");
+  } catch {
+    logger.error("platform-api shutdown error");
   }
 
-  await Promise.allSettled([disconnectRedis(), disconnectMongo()]);
-  logger.info("platform-api shutdown complete");
   process.exit(0);
 };
 
