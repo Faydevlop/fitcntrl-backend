@@ -4,7 +4,7 @@ import { logger } from "../common/logger/app-logger";
 
 export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction): void => {
   logger.error("Unhandled automation-service error", {
-    requestId: (req as any).requestContext?.requestId,
+    requestId: req.requestContext?.requestId,
     message: err.message,
   });
   fail(res, 500, err.message || "Internal server error");

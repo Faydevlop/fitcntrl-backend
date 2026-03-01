@@ -18,7 +18,6 @@ const emit = (level: LogLevel, message: string, meta?: Record<string, unknown>):
     return;
   }
 
-  // eslint-disable-next-line no-console
   console.log(
     JSON.stringify({
       level,

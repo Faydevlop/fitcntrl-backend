@@ -23,7 +23,7 @@ export const requireAuthenticated = (req: Request, res: Response, next: NextFunc
     return;
   }
 
-  (req as any).authContext = {
+  req.authContext = {
     token,
     role: payload.role as UserRole,
     userId: payload.sub,
@@ -39,7 +39,7 @@ export const requireAuthenticated = (req: Request, res: Response, next: NextFunc
 
 export const allowRoles = (...roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const role = (req as any).authContext?.role;
+    const role = req.authContext?.role;
     if (!role || role === "unknown" || !roles.includes(role)) {
       fail(res, 403, "You do not have permission for this action");
       return;

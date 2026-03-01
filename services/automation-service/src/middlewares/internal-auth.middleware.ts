@@ -16,6 +16,8 @@ export const requireInternalAuth = (req: Request, res: Response, next: NextFunct
     return;
   }
 
-  (req as any).internalAuth = { token: internalToken };
+  req.internalAuth = {
+    token: internalToken
+  };
   next();
 };

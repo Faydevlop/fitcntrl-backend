@@ -486,7 +486,7 @@ export const adminCore = {
 
   async createAnnouncement(rawPayload: unknown, req?: Request) {
     const payload = (rawPayload || {}) as Record<string, unknown>;
-    const actorUserId = (req as any)?.authContext?.userId;
+    const actorUserId = req?.authContext?.userId;
     if (!actorUserId || !Types.ObjectId.isValid(actorUserId)) {
       throw new Error("Invalid admin context");
     }
