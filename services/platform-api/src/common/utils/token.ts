@@ -5,6 +5,7 @@ type JwtPayload = {
   sub: string;
   role: "admin" | "gym_owner";
   gymId?: string;
+  type: "access" | "refresh";
   exp: number;
   iat: number;
 };
@@ -45,6 +46,31 @@ export const createAccessToken = (payload: {
   const expiresInSeconds = parseExpiryToSeconds(env.jwtExpiresIn);
   const fullPayload: JwtPayload = {
     ...payload,
+    type: "access",
+    iat: nowSeconds,
+    exp: nowSeconds + expiresInSeconds,
+  };
+
+  const headerPart = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payloadPart = toBase64Url(JSON.stringify(fullPayload));
+  const signaturePart = signPart(`${headerPart}.${payloadPart}`);
+
+  return {
+    token: `${headerPart}.${payloadPart}.${signaturePart}`,
+    expiresInSeconds,
+  };
+};
+
+export const createRefreshToken = (payload: {
+  sub: string;
+  role: "admin" | "gym_owner";
+  gymId?: string;
+}): { token: string; expiresInSeconds: number } => {
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const expiresInSeconds = 7 * 24 * 60 * 60; // 7 days
+  const fullPayload: JwtPayload = {
+    ...payload,
+    type: "refresh",
     iat: nowSeconds,
     exp: nowSeconds + expiresInSeconds,
   };

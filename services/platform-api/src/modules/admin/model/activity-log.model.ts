@@ -13,7 +13,7 @@ export interface ActivityLogDocument {
   createdAt: Date;
 }
 
-const activityLogSchema = new Schema<ActivityLogDocument>(
+export const activityLogSchema = new Schema<ActivityLogDocument>(
   {
     actorUserId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     actorRole: { type: String, enum: ["admin", "gym_owner"], required: true },

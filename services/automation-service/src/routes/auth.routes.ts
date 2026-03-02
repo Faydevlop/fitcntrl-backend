@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { authController } from "../modules/auth/controller/auth.controller";
-import { requireAuthenticated } from "../middlewares/auth.middleware";
-import { requireBodyKeys } from "../middlewares/validate.middleware";
 import { asyncHandler } from "../middlewares/async-handler.middleware";
+import { requireBodyKeys } from "../middlewares/validate.middleware";
+import { requireAuthenticated } from "../middlewares/auth.middleware";
 
 export const authRoutes = Router();
 
@@ -136,14 +136,14 @@ export const authRoutes = Router();
 authRoutes.post("/login", requireBodyKeys("email", "password"), asyncHandler(authController.login));
 authRoutes.post("/forgot-password", requireBodyKeys("email"), asyncHandler(authController.forgotPassword));
 authRoutes.post(
-  "/verify-code",
-  requireBodyKeys("email", "code", "newPassword"),
-  asyncHandler(authController.verifyCode),
+    "/verify-code",
+    requireBodyKeys("email", "code", "newPassword"),
+    asyncHandler(authController.verifyCode),
 );
 authRoutes.post(
-  "/reset-password",
-  requireAuthenticated,
-  requireBodyKeys("oldPassword", "newPassword"),
-  asyncHandler(authController.resetPassword),
+    "/reset-password",
+    requireAuthenticated,
+    requireBodyKeys("oldPassword", "newPassword"),
+    asyncHandler(authController.resetPassword),
 );
 authRoutes.get("/me", requireAuthenticated, asyncHandler(authController.me));

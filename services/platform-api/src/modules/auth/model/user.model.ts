@@ -14,7 +14,7 @@ export interface UserDocument {
   updatedAt: Date;
 }
 
-const userSchema = new Schema<UserDocument>(
+export const userSchema = new Schema<UserDocument>(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone: { type: String, trim: true },

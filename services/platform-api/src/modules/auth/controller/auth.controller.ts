@@ -4,23 +4,23 @@ import { ok } from "../../../common/utils/http";
 
 export const authController = {
   async login(req: Request, res: Response) {
-    const data = await authCore.login(req.body);
-    return ok(res, data, "Login handled");
+    const data = await authCore.login(req.body, req.db);
+    return ok(res, data, "Logged in successfully");
   },
   async forgotPassword(req: Request, res: Response) {
-    const data = await authCore.forgotPassword(req.body);
-    return ok(res, data, "Forgot password request handled");
+    const data = await authCore.forgotPassword(req.body, req.db);
+    return ok(res, data, "OTP sent successfully. Please check your email.");
   },
   async verifyCode(req: Request, res: Response) {
-    const data = await authCore.verifyCode(req.body);
-    return ok(res, data, "Verify code handled");
+    const data = await authCore.verifyCode(req.body, req.db);
+    return ok(res, data, "OTP verified and password updated successfully.");
   },
   async resetPassword(req: Request, res: Response) {
-    const data = await authCore.resetPassword(req.body);
-    return ok(res, data, "Reset password handled");
+    const data = await authCore.changePassword(req.body, req.authContext?.userId, req.db);
+    return ok(res, data, "Password updated successfully.");
   },
   async me(req: Request, res: Response) {
-    const data = await authCore.me({ userId: req.authContext?.userId });
-    return ok(res, data, "Profile fetched");
+    const data = await authCore.me({ userId: req.authContext?.userId }, req.db);
+    return ok(res, data, "User profile retrieved successfully.");
   },
 };

@@ -102,6 +102,7 @@ export const env = {
   port: readNumber("PORT", 4000),
   apiPrefix: readOptional("API_PREFIX", "/api"),
   mongoUri: readRequired("MONGO_URI"),
+  mongoDemoUri: readRequired("MONGO_DEMO_URI"),
   redisHost: redis.redisHost,
   redisPort: redis.redisPort,
   redisUsername: redis.redisUsername,

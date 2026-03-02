@@ -7,6 +7,7 @@ declare global {
         requestId: string;
         startedAt: number;
       };
+      db: import("mongoose").Connection;
       authContext?: {
         token: string;
         role: UserRole | "unknown";
@@ -17,4 +18,4 @@ declare global {
   }
 }
 
-export {};
+export { };
