@@ -26,6 +26,23 @@ export interface GymRefDocument {
   phone: string;
   status: string;
   waMode: "shared" | "dedicated";
+  planId?: Types.ObjectId;
+}
+
+export interface PlanRefDocument {
+  _id: Types.ObjectId;
+  isBasic?: boolean;
+}
+
+export interface WhatsAppLineRefDocument {
+  _id: Types.ObjectId;
+  phone: string;
+  phoneNumberId: string;
+  wabaId: string;
+  tokenEncrypted: string;
+  setForBasic: boolean;
+  assignedGymId?: Types.ObjectId | null;
+  isActive: boolean;
 }
 
 const userRefSchema = new Schema<UserRefDocument>(
@@ -58,6 +75,27 @@ const gymRefSchema = new Schema<GymRefDocument>(
     phone: String,
     status: String,
     waMode: String,
+    planId: Schema.Types.ObjectId,
+  },
+  { versionKey: false },
+);
+
+const planRefSchema = new Schema<PlanRefDocument>(
+  {
+    isBasic: Boolean,
+  },
+  { versionKey: false },
+);
+
+const whatsappLineRefSchema = new Schema<WhatsAppLineRefDocument>(
+  {
+    phone: String,
+    phoneNumberId: String,
+    wabaId: String,
+    tokenEncrypted: String,
+    setForBasic: Boolean,
+    assignedGymId: Schema.Types.ObjectId,
+    isActive: Boolean,
   },
   { versionKey: false },
 );
@@ -69,3 +107,8 @@ export const MemberRefModel: Model<MemberRefDocument> =
   model<MemberRefDocument>("MemberRef", memberRefSchema, "members");
 export const GymRefModel: Model<GymRefDocument> =
   (models.GymRef as Model<GymRefDocument>) || model<GymRefDocument>("GymRef", gymRefSchema, "gyms");
+export const PlanRefModel: Model<PlanRefDocument> =
+  (models.PlanRef as Model<PlanRefDocument>) || model<PlanRefDocument>("PlanRef", planRefSchema, "plans");
+export const WhatsAppLineRefModel: Model<WhatsAppLineRefDocument> =
+  (models.WhatsAppLineRef as Model<WhatsAppLineRefDocument>) ||
+  model<WhatsAppLineRefDocument>("WhatsAppLineRef", whatsappLineRefSchema, "whatsapplines");

@@ -1,4 +1,5 @@
 import { createHmac } from "crypto";
+import { env } from "../../config/env";
 
 type JwtPayload = {
     sub: string;
@@ -32,11 +33,8 @@ const parseExpiryToSeconds = (value: string): number => {
     return amount * (multipliers[unit] || 1);
 };
 
-// Use a secret from env. For dev, we might need a fallback.
-const JWT_SECRET = process.env.JWT_SECRET || "replace_with_strong_secret";
-
 const signPart = (data: string): string => {
-    return createHmac("sha256", JWT_SECRET).update(data).digest("base64url");
+    return createHmac("sha256", env.jwtSecret).update(data).digest("base64url");
 };
 
 export const createAccessToken = (payload: {

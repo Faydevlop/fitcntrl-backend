@@ -1,4 +1,5 @@
 import { Schema, model, Types } from "mongoose";
+import { PlatformType, PLATFORM_TYPE_VALUES } from "../../../common/constants/enums";
 
 interface GymSubscription {
   startDate: Date;
@@ -20,7 +21,10 @@ export interface GymDocument {
   name: string;
   ownerName: string;
   ownerUserId: Types.ObjectId;
+  platformType: PlatformType;
   phone: string;
+  city?: string;
+  address?: string;
   planId: Types.ObjectId;
   status: "active" | "grace_period" | "frozen" | "suspended";
   waMode: "shared" | "dedicated";
@@ -37,7 +41,10 @@ const gymSchema = new Schema<GymDocument>(
     name: { type: String, required: true, trim: true },
     ownerName: { type: String, required: true, trim: true },
     ownerUserId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    platformType: { type: String, enum: [...PLATFORM_TYPE_VALUES], required: true, default: "gym" },
     phone: { type: String, required: true, trim: true },
+    city: { type: String, trim: true },
+    address: { type: String, trim: true },
     planId: { type: Schema.Types.ObjectId, ref: "Plan", required: true },
     status: {
       type: String,

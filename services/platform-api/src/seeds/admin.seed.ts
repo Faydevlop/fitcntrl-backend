@@ -18,9 +18,11 @@ export const seedAdmin = async () => {
     const passwordHash = await hashPasswordBcrypt(adminPassword);
 
     await UserModel.create({
+      name: "Platform Admin",
       email: adminEmail,
       passwordHash,
       role: "admin",
+      onboardingComplete: true,
       isActive: true,
     });
 

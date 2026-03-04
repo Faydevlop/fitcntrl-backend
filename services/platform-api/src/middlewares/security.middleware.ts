@@ -2,8 +2,19 @@ import { NextFunction, Request, Response } from "express";
 import { env } from "../config/env";
 import { fail } from "../common/utils/http";
 
+const DEV_DEFAULT_ORIGINS = new Set([
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]);
+
 const isOriginAllowed = (origin: string | undefined): boolean => {
   if (!origin) {
+    return true;
+  }
+
+  if (env.nodeEnv === "development" && DEV_DEFAULT_ORIGINS.has(origin)) {
     return true;
   }
 
@@ -30,7 +41,11 @@ export const corsGate = (req: Request, res: Response, next: NextFunction): void 
 
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Authorization,Content-Type,X-User-Role,X-Request-Id");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Authorization,Content-Type,X-User-Role,X-Request-Id,X-DemoDB,x-demodb,X-Gym-Id,x-gym-id",
+  );
+  res.setHeader("Access-Control-Expose-Headers", "x-request-id,x-demodb-active");
 
   if (req.method.toUpperCase() === "OPTIONS") {
     res.status(204).end();

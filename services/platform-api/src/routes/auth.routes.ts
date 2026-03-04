@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authController } from "../modules/auth/controller/auth.controller";
-import { requireAuthenticated } from "../middlewares/auth.middleware";
+import { allowRoles, requireAuthenticated } from "../middlewares/auth.middleware";
 import { requireBodyKeys } from "../middlewares/validate.middleware";
 import { asyncHandler } from "../middlewares/async-handler.middleware";
 
@@ -58,6 +58,61 @@ export const authRoutes = Router();
  *                     email: { type: string }
  *                     role: { type: string }
  *                     gymId: { type: string, nullable: true }
+ *                     currentPlanId: { type: string, nullable: true }
+ *                     platformType: { type: string, nullable: true, enum: [gym, yoga, fitness, dance, personal_training, other] }
+ *
+ * /api/auth/signup:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register a new gym owner account
+ *     parameters:
+ *       - $ref: '#/components/parameters/DemoDbHeader'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, email, countryCode, phone, password]
+ *             properties:
+ *               name: { type: string }
+ *               email: { type: string, format: email }
+ *               countryCode: { type: string, example: "91" }
+ *               phone: { type: string }
+ *               password: { type: string, format: password, minLength: 8 }
+ *     responses:
+ *       200:
+ *         description: Signup successful
+ *
+ * /api/auth/onboarding:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Complete owner onboarding and persist platform-specific setup
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/DemoDbHeader'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [platformType, businessName, ownerName, phone]
+ *             properties:
+ *               platformType:
+ *                 type: string
+ *                 enum: [gym, yoga, fitness, dance, personal_training, other]
+ *               businessName: { type: string }
+ *               ownerName: { type: string }
+ *               phone: { type: string }
+ *               city: { type: string }
+ *               address: { type: string }
+ *               upiId: { type: string }
+ *               displayName: { type: string }
+ *     responses:
+ *       200:
+ *         description: Onboarding completed successfully
  *
  * /api/auth/forgot-password:
  *   post:
@@ -133,7 +188,19 @@ export const authRoutes = Router();
  *       200:
  *         description: Profile fetched
  * */
+authRoutes.post(
+  "/signup",
+  requireBodyKeys("name", "email", "countryCode", "phone", "password"),
+  asyncHandler(authController.signup),
+);
 authRoutes.post("/login", requireBodyKeys("email", "password"), asyncHandler(authController.login));
+authRoutes.post(
+  "/onboarding",
+  requireAuthenticated,
+  allowRoles("gym_owner"),
+  requireBodyKeys("platformType", "businessName", "ownerName", "phone"),
+  asyncHandler(authController.onboarding),
+);
 authRoutes.post("/forgot-password", requireBodyKeys("email"), asyncHandler(authController.forgotPassword));
 authRoutes.post(
   "/verify-code",

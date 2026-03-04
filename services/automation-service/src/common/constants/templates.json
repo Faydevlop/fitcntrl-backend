@@ -1,0 +1,35 @@
+{
+  "templates": {
+    "member_welcome": {
+      "name": "member_welcome",
+      "messageType": "template",
+      "language": "en_US",
+      "category": "UTILITY",
+      "variableKeys": ["memberName", "gymName"]
+    },
+    "payment_received": {
+      "name": "payment_received",
+      "messageType": "template",
+      "language": "en_US",
+      "category": "UTILITY",
+      "variableKeys": ["memberName", "amount", "paidDate"]
+    },
+    "payment_due_reminder": {
+      "name": "payment_due_reminder",
+      "messageType": "template",
+      "language": "en_US",
+      "category": "UTILITY",
+      "variableKeys": ["memberName", "amount", "dueDate", "reason"]
+    },
+    "owner_command_response": {
+      "name": "owner_command_response",
+      "messageType": "text",
+      "text": "{{summary}}"
+    },
+    "owner_pending_report": {
+      "name": "owner_pending_report",
+      "messageType": "text",
+      "text": "Pending members: {{pendingCount}}, Pending amount: {{pendingAmount}}"
+    }
+  }
+}

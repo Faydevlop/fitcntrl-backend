@@ -60,6 +60,28 @@ const parseDnsServers = (): string[] => {
     .filter(Boolean);
 };
 
+const parseBackupTimes = (): number[] => {
+  const raw = readOptional("BACKUP_TIMES", "0,1,2");
+  const tokens = raw
+    .split(",")
+    .map(value => value.trim())
+    .filter(Boolean);
+
+  if (tokens.length === 0) {
+    throw new Error("[config] BACKUP_TIMES must contain at least one hour");
+  }
+
+  const hours = tokens.map(token => {
+    const parsed = Number(token);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 23) {
+      throw new Error(`[config] BACKUP_TIMES contains invalid hour: ${token}`);
+    }
+    return parsed;
+  });
+
+  return [...new Set(hours)].sort((a, b) => a - b);
+};
+
 const parseRedisConfig = (): RedisConfig => {
   const rawUrl = process.env.REDIS_URL?.trim();
   if (rawUrl) {
@@ -121,4 +143,8 @@ export const env = {
   smtpSecure: readBoolean("SMTP_SECURE", false),
   mailFrom: readOptional("MAIL_FROM", "no-reply@fitcntrl.com"),
   appName: readOptional("APP_NAME", "FitCntrl"),
+  whatsappGraphApiBaseUrl: readOptional("WHATSAPP_GRAPH_API_BASE_URL", "https://graph.facebook.com/v24.0"),
+  backupTimeZone: readOptional("BACKUP_TIMEZONE", "Asia/Kolkata"),
+  backupRootDir: readOptional("BACKUP_ROOT_DIR", "backups"),
+  backupTimes: parseBackupTimes(),
 };

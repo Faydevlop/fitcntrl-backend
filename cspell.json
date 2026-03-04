@@ -117,7 +117,12 @@
     "gymflow",
     "nosniff",
     "smhd",
-    "demodb"
+    "demodb",
+    "encv",
+    "whatsapplines",
+    "backuptimes",
+    "HIIT",
+    "Zumba"
   ],
   "ignoreRegExpList": [
     "/\\bI[A-Z][a-zA-Z]*\\b/"

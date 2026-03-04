@@ -13,6 +13,48 @@ gymRoutes.use(requireAuthenticated, allowRoles("gym_owner"));
  *   - name: Gym
  *     description: Gym owner APIs
  *
+ * /api/gym/members/getAll:
+ *   post:
+ *     tags: [Gym]
+ *     summary: List members with table query payload
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Members fetched
+ *
+ * /api/gym/payments/getAll:
+ *   post:
+ *     tags: [Gym]
+ *     summary: List payments with table query payload
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Payments fetched
+ *
+ * /api/gym/payments/pending/getAll:
+ *   post:
+ *     tags: [Gym]
+ *     summary: List pending payments with table query payload
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Pending payments fetched
+ *
  * /api/gym/dashboard/stats:
  *   get:
  *     tags: [Gym]
@@ -110,22 +152,49 @@ gymRoutes.use(requireAuthenticated, allowRoles("gym_owner"));
  *     responses:
  *       200:
  *         description: Billing fetched
+ *   patch:
+ *     tags: [Gym]
+ *     summary: Update gym settings and billing preferences
+ *     responses:
+ *       200:
+ *         description: Gym settings updated
  *
  * /api/gym/support:
+ *   get:
+ *     tags: [Gym]
+ *     summary: List support tickets
+ *     responses:
+ *       200:
+ *         description: Support tickets fetched
  *   post:
  *     tags: [Gym]
  *     summary: Create support ticket
  *     responses:
  *       201:
  *         description: Support ticket created
+ *
+ * /api/gym/support/getAll:
+ *   post:
+ *     tags: [Gym]
+ *     summary: List support tickets with table query payload
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Support tickets fetched
  */
 gymRoutes.get("/dashboard/stats", asyncHandler(gymController.dashboardStats));
 gymRoutes.get("/dashboard/growth", asyncHandler(gymController.dashboardGrowth));
 
 gymRoutes.get("/members", asyncHandler(gymController.listMembers));
+gymRoutes.post("/members/getAll", asyncHandler(gymController.listMembers));
 gymRoutes.post(
   "/members",
-  requireBodyKeys("name", "phone", "plan", "fee"),
+  requireBodyKeys("name", "countryCode", "phone", "plan", "fee"),
   asyncHandler(gymController.createMember),
 );
 gymRoutes.get("/members/:id", requireObjectIdParam("id"), asyncHandler(gymController.getMemberById));
@@ -133,14 +202,19 @@ gymRoutes.patch("/members/:id", requireObjectIdParam("id"), asyncHandler(gymCont
 gymRoutes.delete("/members/:id", requireObjectIdParam("id"), asyncHandler(gymController.deleteMember));
 
 gymRoutes.get("/payments", asyncHandler(gymController.listPayments));
+gymRoutes.post("/payments/getAll", asyncHandler(gymController.listPayments));
 gymRoutes.post(
   "/payments",
   requireBodyKeys("memberId", "amount", "paidDate", "monthLabel", "method"),
   asyncHandler(gymController.createPayment),
 );
 gymRoutes.get("/payments/pending", asyncHandler(gymController.pendingPayments));
+gymRoutes.post("/payments/pending/getAll", asyncHandler(gymController.pendingPayments));
 
 gymRoutes.get("/billing", asyncHandler(gymController.billingSummary));
+gymRoutes.patch("/billing", asyncHandler(gymController.updateSettings));
+gymRoutes.get("/support", asyncHandler(gymController.listSupportTickets));
+gymRoutes.post("/support/getAll", asyncHandler(gymController.listSupportTickets));
 gymRoutes.post(
   "/support",
   requireBodyKeys("subject", "message"),

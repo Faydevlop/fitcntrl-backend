@@ -4,6 +4,7 @@ export interface MemberDocument {
   _id: Types.ObjectId;
   gymId: Types.ObjectId;
   name: string;
+  countryCode: string;
   phone: string;
   plan: "monthly" | "quarterly" | "yearly";
   fee: number;
@@ -22,6 +23,7 @@ const memberSchema = new Schema<MemberDocument>(
   {
     gymId: { type: Schema.Types.ObjectId, ref: "Gym", required: true, index: true },
     name: { type: String, required: true, trim: true },
+    countryCode: { type: String, required: true, trim: true, default: "91" },
     phone: { type: String, required: true, trim: true },
     plan: { type: String, enum: ["monthly", "quarterly", "yearly"], required: true },
     fee: { type: Number, required: true, min: 0 },
@@ -36,7 +38,7 @@ const memberSchema = new Schema<MemberDocument>(
   { timestamps: true, versionKey: false },
 );
 
-memberSchema.index({ gymId: 1, phone: 1 }, { unique: true });
+memberSchema.index({ gymId: 1, countryCode: 1, phone: 1 }, { unique: true });
 memberSchema.index({ gymId: 1, paymentStatus: 1, nextDueDate: 1 });
 memberSchema.index({ gymId: 1, status: 1 });
 

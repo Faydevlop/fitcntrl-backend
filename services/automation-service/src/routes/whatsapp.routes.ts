@@ -2,7 +2,7 @@ import { Router } from "express";
 import { webhookController } from "../modules/webhook/controller/webhook.controller";
 import { outboundController } from "../modules/outbound/controller/outbound.controller";
 import { statusController } from "../modules/status/controller/status.controller";
-import { requireInternalAuth } from "../middlewares/internal-auth.middleware";
+import { requireAuthenticated } from "../middlewares/auth.middleware";
 import { requireBodyKeys } from "../middlewares/validate.middleware";
 import { asyncHandler } from "../middlewares/async-handler.middleware";
 
@@ -33,7 +33,7 @@ export const whatsappRoutes = Router();
  *     tags: [WhatsApp]
  *     summary: Queue payment reminder send
  *     security:
- *       - internalTokenAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       201:
  *         description: Reminder queued
@@ -43,7 +43,7 @@ export const whatsappRoutes = Router();
  *     tags: [WhatsApp]
  *     summary: Queue owner report send
  *     security:
- *       - internalTokenAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       201:
  *         description: Report queued
@@ -53,7 +53,7 @@ export const whatsappRoutes = Router();
  *     tags: [WhatsApp]
  *     summary: Check WhatsApp service status
  *     security:
- *       - internalTokenAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Status fetched
@@ -62,15 +62,15 @@ whatsappRoutes.get("/webhook", webhookController.verify);
 whatsappRoutes.post("/webhook", asyncHandler(webhookController.receive));
 whatsappRoutes.post(
   "/send-reminder",
-  requireInternalAuth,
+  requireAuthenticated,
   requireBodyKeys("gymId", "memberId"),
   asyncHandler(outboundController.sendReminder),
 );
 whatsappRoutes.post(
   "/send-report",
-  requireInternalAuth,
+  requireAuthenticated,
   requireBodyKeys("gymId", "reportType"),
   asyncHandler(outboundController.sendReport),
 );
-whatsappRoutes.get("/status", requireInternalAuth, asyncHandler(outboundController.status));
-whatsappRoutes.get("/internal/health", requireInternalAuth, asyncHandler(statusController.health));
+whatsappRoutes.get("/status", requireAuthenticated, asyncHandler(outboundController.status));
+whatsappRoutes.get("/internal/health", requireAuthenticated, asyncHandler(statusController.health));

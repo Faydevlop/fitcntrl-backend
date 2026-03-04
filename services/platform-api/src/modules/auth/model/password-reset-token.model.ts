@@ -12,7 +12,7 @@ export interface PasswordResetTokenDocument {
   updatedAt: Date;
 }
 
-const passwordResetTokenSchema = new Schema<PasswordResetTokenDocument>(
+export const passwordResetTokenSchema = new Schema<PasswordResetTokenDocument>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     channel: { type: String, enum: ["email", "phone", "whatsapp"], required: true },

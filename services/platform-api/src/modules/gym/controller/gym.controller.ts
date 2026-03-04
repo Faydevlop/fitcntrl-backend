@@ -18,16 +18,17 @@ export const gymController = {
     );
   },
   async listMembers(req: Request, res: Response) {
+    const input = req.method === "POST" ? req.body : req.query;
     return ok(
       res,
-      await gymCore.listMembers(req.query, req.authContext),
+      await gymCore.listMembers(input, req.authContext, req.db),
       "Members fetched successfully",
     );
   },
   async createMember(req: Request, res: Response) {
     return created(
       res,
-      await gymCore.createMember(req.body, req.authContext),
+      await gymCore.createMember(req.body, req.authContext, req.db),
       "Member created successfully",
     );
   },
@@ -53,23 +54,25 @@ export const gymController = {
     );
   },
   async listPayments(req: Request, res: Response) {
+    const input = req.method === "POST" ? req.body : req.query;
     return ok(
       res,
-      await gymCore.listPayments(req.query, req.authContext),
+      await gymCore.listPayments(input, req.authContext, req.db),
       "Payments fetched successfully",
     );
   },
   async createPayment(req: Request, res: Response) {
     return created(
       res,
-      await gymCore.createPayment(req.body, req.authContext),
+      await gymCore.createPayment(req.body, req.authContext, req.db),
       "Payment recorded successfully",
     );
   },
   async pendingPayments(req: Request, res: Response) {
+    const input = req.method === "POST" ? req.body : req.query;
     return ok(
       res,
-      await gymCore.pendingPayments(req.query, req.authContext),
+      await gymCore.pendingPayments(input, req.authContext, req.db),
       "Pending payments fetched successfully",
     );
   },
@@ -78,6 +81,21 @@ export const gymController = {
       res,
       await gymCore.billingSummary({ auth: req.authContext, query: req.query }),
       "Billing fetched successfully",
+    );
+  },
+  async updateSettings(req: Request, res: Response) {
+    return ok(
+      res,
+      await gymCore.updateSettings(req.body, req.authContext),
+      "Gym settings updated successfully",
+    );
+  },
+  async listSupportTickets(req: Request, res: Response) {
+    const input = req.method === "POST" ? req.body : req.query;
+    return ok(
+      res,
+      await gymCore.listSupportTickets(input, req.authContext, req.db),
+      "Support tickets fetched successfully",
     );
   },
   async createSupportTicket(req: Request, res: Response) {

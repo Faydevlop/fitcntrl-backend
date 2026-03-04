@@ -4,6 +4,8 @@ import { waCommandQueue, waOutboundQueue } from "../../../../bootstrap/queues";
 import { WhatsAppMessageLogModel } from "../../../outbound/model/whatsapp-message-log.model";
 import { WebhookEventModel } from "../../model/webhook-event.model";
 import { MemberRefModel, UserRefModel } from "../../model/platform-ref.model";
+import { TEMPLATE_NAMES } from "../../../../common/constants/templates";
+import { resolveEncryptedOutboundLineConfig } from "../../../../common/utils/outbound-line-config";
 
 type IncomingMessage = {
   id?: string;
@@ -103,14 +105,40 @@ export const webhookCore = {
 
           if (command) {
             const summary = await buildOwnerSummary(senderPhone);
+            const lineConfig = await resolveEncryptedOutboundLineConfig({ gymId: summary.gymId });
+            if (!lineConfig) {
+              await WhatsAppMessageLogModel.create({
+                gymId:
+                  summary.gymId && Types.ObjectId.isValid(summary.gymId)
+                    ? new Types.ObjectId(summary.gymId)
+                    : undefined,
+                direction: "outbound",
+                type: "command_response",
+                status: "failed",
+                templateName: TEMPLATE_NAMES.OWNER_COMMAND_RESPONSE,
+                error: "No active WhatsApp sender line configured.",
+                payload: {
+                  to: senderPhone,
+                  messageType: "text",
+                  templateName: TEMPLATE_NAMES.OWNER_COMMAND_RESPONSE,
+                  variables: {
+                    command,
+                    summary: summary.message,
+                  },
+                },
+              });
+              continue;
+            }
+
             const outboundPayload = {
               to: senderPhone,
               messageType: "text",
-              templateName: "owner_command_response",
+              templateName: TEMPLATE_NAMES.OWNER_COMMAND_RESPONSE,
               variables: {
                 command,
                 summary: summary.message,
               },
+              lineConfig,
             };
 
             const outboundLog = await WhatsAppMessageLogModel.create({
@@ -121,7 +149,7 @@ export const webhookCore = {
               direction: "outbound",
               type: "command_response",
               status: "queued",
-              templateName: "owner_command_response",
+              templateName: TEMPLATE_NAMES.OWNER_COMMAND_RESPONSE,
               payload: outboundPayload,
             });
 

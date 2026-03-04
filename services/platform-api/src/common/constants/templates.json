@@ -1,0 +1,26 @@
+﻿{
+  "templates": {
+    "member_welcome": {
+      "name": "member_welcome",
+      "language": "en_US",
+      "category": "UTILITY",
+      "variableKeys": ["memberName", "gymName"],
+      "bodyText": "Hi {{1}} Welcome to {{2}}!\n\nYour membership has been activated successfully."
+    },
+    "payment_received": {
+      "name": "payment_received",
+      "language": "en_US",
+      "category": "UTILITY",
+      "variableKeys": ["memberName", "amount", "paidDate"]
+    },
+    "announcement_broadcast": {
+      "name": "announcement_broadcast",
+      "language": "en_US",
+      "category": "UTILITY",
+      "variableKeys": ["announcementMessage"]
+    }
+  },
+  "messages": {
+    "announcementPrefix": "New Announcement"
+  }
+}

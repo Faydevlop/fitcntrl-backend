@@ -27,6 +27,132 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *   - name: Admin Support
  *     description: Gym owner support ticket management.
  *
+ * /api/admin/gyms/getAll:
+ *   post:
+ *     tags: [Admin Gyms]
+ *     summary: List gyms (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Gyms fetched
+ *
+ * /api/admin/plans/getAll:
+ *   post:
+ *     tags: [Admin Plans]
+ *     summary: List plans (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Plans fetched
+ *
+ * /api/admin/subscriptions/getAll:
+ *   post:
+ *     tags: [Admin Subscriptions]
+ *     summary: List subscriptions (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Subscriptions fetched
+ *
+ * /api/admin/subscription-payments/getAll:
+ *   post:
+ *     tags: [Admin Subscriptions]
+ *     summary: List subscription payments (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Subscription payments fetched
+ *
+ * /api/admin/whatsapp-phones/getAll:
+ *   post:
+ *     tags: [Admin WhatsApp]
+ *     summary: List WhatsApp lines (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: WhatsApp lines fetched
+ *
+ * /api/admin/activity-logs/getAll:
+ *   post:
+ *     tags: [Admin Activity]
+ *     summary: List activity logs (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Activity logs fetched
+ *
+ * /api/admin/announcements/getAll:
+ *   post:
+ *     tags: [Admin Announcements]
+ *     summary: List announcements (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Announcements fetched
+ *
+ * /api/admin/enquiries/getAll:
+ *   post:
+ *     tags: [Admin Enquiries]
+ *     summary: List enquiries (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Enquiries fetched
+ *
+ * /api/admin/owner-support/getAll:
+ *   post:
+ *     tags: [Admin Support]
+ *     summary: List owner support tickets (table query filters/search/sort/pagination)
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TableQueryRequest'
+ *     responses:
+ *       200:
+ *         description: Owner support tickets fetched
+ *
  * /api/admin/gyms:
  *   get:
  *     tags: [Admin Gyms]
@@ -180,6 +306,18 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *         description: WhatsApp phone added
  *
  * /api/admin/whatsapp-phones/{id}:
+ *   get:
+ *     tags: [Admin WhatsApp]
+ *     summary: Get WhatsApp line details (token visible only here)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: WhatsApp phone fetched
  *   patch:
  *     tags: [Admin WhatsApp]
  *     summary: Update WhatsApp line credentials
@@ -232,6 +370,7 @@ adminRoutes.use(requireAuthenticated, allowRoles("admin"));
  *         description: Owner support tickets fetched
  */
 adminRoutes.get("/gyms", asyncHandler(adminController.listGyms));
+adminRoutes.post("/gyms/getAll", asyncHandler(adminController.listGyms));
 adminRoutes.post(
   "/gyms",
   requireBodyKeys("name", "ownerName", "phone", "planId"),
@@ -245,6 +384,7 @@ adminRoutes.post("/gyms/:id/unfreeze", requireObjectIdParam("id"), asyncHandler(
 adminRoutes.post("/gyms/:id/reset-wa", requireObjectIdParam("id"), asyncHandler(adminController.resetGymWa));
 
 adminRoutes.get("/plans", asyncHandler(adminController.listPlans));
+adminRoutes.post("/plans/getAll", asyncHandler(adminController.listPlans));
 adminRoutes.post(
   "/plans",
   requireBodyKeys("name", "billing", "price"),
@@ -253,13 +393,22 @@ adminRoutes.post(
 adminRoutes.patch("/plans/:id", requireObjectIdParam("id"), asyncHandler(adminController.updatePlan));
 
 adminRoutes.get("/subscriptions", asyncHandler(adminController.listSubscriptions));
+adminRoutes.post("/subscriptions/getAll", asyncHandler(adminController.listSubscriptions));
+adminRoutes.get("/subscription-payments", asyncHandler(adminController.listSubscriptionPayments));
+adminRoutes.post("/subscription-payments/getAll", asyncHandler(adminController.listSubscriptionPayments));
 adminRoutes.get("/revenue-stats", asyncHandler(adminController.revenueStats));
 
 adminRoutes.get("/whatsapp-phones", asyncHandler(adminController.listWhatsAppPhones));
+adminRoutes.post("/whatsapp-phones/getAll", asyncHandler(adminController.listWhatsAppPhones));
 adminRoutes.post(
   "/whatsapp-phones",
   requireBodyKeys("phone", "phoneNumberId", "wabaId", "tokenEncrypted"),
   asyncHandler(adminController.createWhatsAppPhone),
+);
+adminRoutes.get(
+  "/whatsapp-phones/:id",
+  requireObjectIdParam("id"),
+  asyncHandler(adminController.getWhatsAppPhoneById),
 );
 adminRoutes.patch(
   "/whatsapp-phones/:id",
@@ -268,11 +417,21 @@ adminRoutes.patch(
 );
 
 adminRoutes.get("/activity-logs", asyncHandler(adminController.listActivityLogs));
+adminRoutes.post("/activity-logs/getAll", asyncHandler(adminController.listActivityLogs));
 adminRoutes.get("/announcements", asyncHandler(adminController.listAnnouncements));
+adminRoutes.post("/announcements/getAll", asyncHandler(adminController.listAnnouncements));
 adminRoutes.post(
   "/announcements",
   requireBodyKeys("message"),
   asyncHandler(adminController.createAnnouncement),
 );
 adminRoutes.get("/enquiries", asyncHandler(adminController.listEnquiries));
+adminRoutes.post("/enquiries/getAll", asyncHandler(adminController.listEnquiries));
+adminRoutes.patch("/enquiries/:id", requireObjectIdParam("id"), asyncHandler(adminController.updateEnquiry));
 adminRoutes.get("/owner-support", asyncHandler(adminController.listOwnerSupport));
+adminRoutes.post("/owner-support/getAll", asyncHandler(adminController.listOwnerSupport));
+adminRoutes.patch(
+  "/owner-support/:id",
+  requireObjectIdParam("id"),
+  asyncHandler(adminController.updateOwnerSupport),
+);

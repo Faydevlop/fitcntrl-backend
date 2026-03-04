@@ -5,6 +5,7 @@ export interface PlanDocument {
   name: string;
   billing: "monthly" | "yearly";
   price: number;
+  isBasic: boolean;
   maxMembers: number;
   whatsappLimit: number;
   features: string[];
@@ -21,6 +22,7 @@ const planSchema = new Schema<PlanDocument>(
     name: { type: String, required: true, trim: true },
     billing: { type: String, enum: ["monthly", "yearly"], required: true },
     price: { type: Number, required: true, min: 0 },
+    isBasic: { type: Boolean, default: false },
     maxMembers: { type: Number, required: true, min: 0 },
     whatsappLimit: { type: Number, required: true, min: 0 },
     features: { type: [String], default: [] },
@@ -34,5 +36,6 @@ const planSchema = new Schema<PlanDocument>(
 
 planSchema.index({ name: 1, billing: 1 }, { unique: true });
 planSchema.index({ active: 1 });
+planSchema.index({ isBasic: 1 }, { unique: true, partialFilterExpression: { isBasic: true } });
 
 export const PlanModel = model<PlanDocument>("Plan", planSchema);

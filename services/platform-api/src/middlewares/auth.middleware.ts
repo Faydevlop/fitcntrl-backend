@@ -4,10 +4,25 @@ import { fail } from "../common/utils/http";
 import { verifyAccessToken } from "../common/utils/token";
 
 const parseBearer = (headerValue?: string): string | null => {
-  if (!headerValue || !headerValue.startsWith("Bearer ")) {
+  if (!headerValue) {
     return null;
   }
-  return headerValue.slice("Bearer ".length).trim() || null;
+
+  let token = headerValue.trim();
+  if (!token) {
+    return null;
+  }
+
+  if (/^bearer\s+/i.test(token)) {
+    token = token.replace(/^bearer\s+/i, "").trim();
+  }
+
+  // Be tolerant of accidental "Bearer Bearer <token>" inputs from clients.
+  if (/^bearer\s+/i.test(token)) {
+    token = token.replace(/^bearer\s+/i, "").trim();
+  }
+
+  return token || null;
 };
 
 export const requireAuthenticated = (req: Request, res: Response, next: NextFunction): void => {

@@ -1,4 +1,13 @@
 export type UserRole = "admin" | "gym_owner";
+export const PLATFORM_TYPE_VALUES = [
+  "gym",
+  "yoga",
+  "fitness",
+  "dance",
+  "personal_training",
+  "other",
+] as const;
+export type PlatformType = (typeof PLATFORM_TYPE_VALUES)[number];
 export type AccountStatus = "active" | "grace_period" | "frozen" | "suspended";
 export type MemberStatus = "active" | "paused" | "expired" | "blacklisted";
 export type PaymentMethod = "cash" | "upi" | "card" | "online";

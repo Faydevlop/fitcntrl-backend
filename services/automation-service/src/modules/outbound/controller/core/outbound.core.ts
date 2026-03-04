@@ -2,6 +2,8 @@ import { Types } from "mongoose";
 import { waOutboundQueue, waReminderQueue, waReportQueue } from "../../../../bootstrap/queues";
 import { WhatsAppMessageLogModel } from "../../model/whatsapp-message-log.model";
 import { GymRefModel, MemberRefModel, UserRefModel } from "../../../webhook/model/platform-ref.model";
+import { TEMPLATE_NAMES } from "../../../../common/constants/templates";
+import { resolveEncryptedOutboundLineConfig } from "../../../../common/utils/outbound-line-config";
 
 type ReminderPayload = {
   gymId?: string;
@@ -42,21 +44,25 @@ export const outboundCore = {
       memberId: memberId.toString(),
       to: normalizePhone(member.phone),
       messageType: "template",
-      templateName: "payment_due_reminder",
+      templateName: TEMPLATE_NAMES.PAYMENT_DUE_REMINDER,
       variables: {
         memberName: member.name,
         amount: payload.amount || member.fee,
         dueDate: payload.dueDate || member.nextDueDate,
         reason: payload.reason || "payment_due",
       },
+      lineConfig: await resolveEncryptedOutboundLineConfig({ gymId: gymId.toString() }),
     };
+    if (!queueMessage.lineConfig) {
+      throw new Error("No active WhatsApp sender line configured for this gym.");
+    }
 
     const messageLog = await WhatsAppMessageLogModel.create({
       gymId,
       memberId,
       direction: "outbound",
       type: "payment_reminder",
-      templateName: "payment_due_reminder",
+      templateName: TEMPLATE_NAMES.PAYMENT_DUE_REMINDER,
       status: "queued",
       payload: queueMessage,
     });
@@ -119,16 +125,20 @@ export const outboundCore = {
       ownerUserId: owner._id.toString(),
       to: normalizePhone(owner.phone),
       messageType: "text",
-      templateName: "owner_pending_report",
+      templateName: TEMPLATE_NAMES.OWNER_PENDING_REPORT,
       variables: reportSummary,
+      lineConfig: await resolveEncryptedOutboundLineConfig({ gymId: gymId.toString() }),
     };
+    if (!queueMessage.lineConfig) {
+      throw new Error("No active WhatsApp sender line configured for this gym.");
+    }
 
     const messageLog = await WhatsAppMessageLogModel.create({
       gymId,
       ownerUserId: owner._id,
       direction: "outbound",
       type: "owner_report",
-      templateName: "owner_pending_report",
+      templateName: TEMPLATE_NAMES.OWNER_PENDING_REPORT,
       status: "queued",
       payload: queueMessage,
     });

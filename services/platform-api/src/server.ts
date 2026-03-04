@@ -6,12 +6,16 @@ import { verifyDependencies } from "./bootstrap/dependency-check";
 import { logger } from "./common/logger/app-logger";
 import { Server } from "http";
 import { seedAdmin } from "./seeds/admin.seed";
+import { seedBasicPlan } from "./seeds/basic-plan.seed";
+import { startBackupScheduler, stopBackupScheduler } from "./bootstrap/backup-scheduler";
 
 let server: Server;
 const start = async (): Promise<void> => {
   await connectMongo();
   await verifyDependencies();
   await seedAdmin();
+  await seedBasicPlan();
+  startBackupScheduler();
 
   server = app.listen(env.port, () => {
     logger.info("platform-api started", {
@@ -42,6 +46,8 @@ const shutdown = async (signal: string): Promise<void> => {
     if (server) {
       await new Promise<void>(resolve => server.close(() => resolve()));
     }
+
+    stopBackupScheduler();
 
     await Promise.allSettled([disconnectRedis(), disconnectMongo()]);
     logger.info("platform-api shutdown complete");

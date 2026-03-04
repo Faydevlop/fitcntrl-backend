@@ -3,9 +3,17 @@ import { authCore } from "./core/auth.core";
 import { ok } from "../../../common/utils/http";
 
 export const authController = {
+  async signup(req: Request, res: Response) {
+    const data = await authCore.signup(req.body, req.db);
+    return ok(res, data, "Signed up successfully");
+  },
   async login(req: Request, res: Response) {
     const data = await authCore.login(req.body, req.db);
     return ok(res, data, "Logged in successfully");
+  },
+  async onboarding(req: Request, res: Response) {
+    const data = await authCore.completeOnboarding(req.body, { userId: req.authContext?.userId }, req.db);
+    return ok(res, data, "Onboarding completed successfully");
   },
   async forgotPassword(req: Request, res: Response) {
     const data = await authCore.forgotPassword(req.body, req.db);
