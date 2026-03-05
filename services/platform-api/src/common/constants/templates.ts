@@ -18,11 +18,12 @@ type TemplateRegistry = {
 export type TemplateName = keyof TemplateRegistry["templates"] & string;
 
 export const TEMPLATE_NAMES: Record<
-  "MEMBER_WELCOME" | "PAYMENT_RECEIVED" | "ANNOUNCEMENT_BROADCAST",
+  "MEMBER_WELCOME" | "PAYMENT_RECEIVED" | "MEMBER_PAYMENT_REMINDER_1" | "ANNOUNCEMENT_BROADCAST",
   TemplateName
 > = {
   MEMBER_WELCOME: "member_welcome",
   PAYMENT_RECEIVED: "payment_received",
+  MEMBER_PAYMENT_REMINDER_1: "member_payment_reminder_1",
   ANNOUNCEMENT_BROADCAST: "announcement_broadcast",
 };
 

@@ -2,8 +2,9 @@ import { Worker } from "bullmq";
 import { WhatsAppMessageLogModel } from "../modules/outbound/model/whatsapp-message-log.model";
 import { queueConnection } from "../common/utils/queue-connection";
 import { env } from "../config/env";
-import { getTemplateConfig } from "../common/constants/templates";
+import { getTemplateConfig } from "../common/constants/template-registry";
 import { decryptFieldValue } from "../common/utils/field-crypto";
+import { logger } from "../common/logger/app-logger";
 import {
   readProviderMessageId,
   sendWhatsAppTemplateMessage,
@@ -23,6 +24,10 @@ type OutboundJobData = {
     phoneNumberIdEncrypted?: string;
     wabaIdEncrypted?: string;
     tokenEncrypted?: string;
+  };
+  followUp?: {
+    messageType?: "text";
+    message?: string;
   };
   messageLogId?: string;
 };
@@ -105,6 +110,10 @@ const resolveTextMessage = (jobData: OutboundJobData): string => {
   throw new Error("No text message content available for outbound job.");
 };
 
+const sleep = async (ms: number): Promise<void> => {
+  await new Promise(resolve => setTimeout(resolve, ms));
+};
+
 export const startOutboundWorker = (): Worker => {
   return new Worker(
     "wa.outbound",
@@ -145,18 +154,48 @@ export const startOutboundWorker = (): Worker => {
                 ),
               })
             : await sendWhatsAppTextMessage(graphConfig, recipientPhone, resolveTextMessage(jobData));
+        const templateProviderMessageId = readProviderMessageId(providerResponse);
+        logger.info("RES FROM WHATSAPP", {
+          jobId: String(job.id || ""),
+          to: recipientPhone,
+          messageType: shouldSendTemplate ? "template" : "text",
+          templateName: templateName || undefined,
+          response: providerResponse,
+        });
+
+        const followUpMessage = String(jobData.followUp?.message || "").trim();
+        if (shouldSendTemplate && followUpMessage) {
+          if (!templateProviderMessageId) {
+            throw new Error("Template accepted without provider message id; skipping follow-up.");
+          }
+          // Give WhatsApp a short window to open conversation before text follow-up.
+          await sleep(3000);
+          const followUpResponse = await sendWhatsAppTextMessage(
+            graphConfig,
+            recipientPhone,
+            followUpMessage,
+          );
+          logger.info("RES FROM WHATSAPP", {
+            jobId: String(job.id || ""),
+            to: recipientPhone,
+            messageType: "text",
+            templateName: undefined,
+            response: followUpResponse,
+            stage: "followUp",
+          });
+        }
 
         if (messageLogId) {
           await WhatsAppMessageLogModel.findByIdAndUpdate(messageLogId, {
             $set: {
               status: "sent",
               sentAt: new Date(),
-              providerMessageId: readProviderMessageId(providerResponse) || undefined,
+              providerMessageId: templateProviderMessageId || undefined,
             },
           });
         }
 
-        return { processed: true, providerMessageId: readProviderMessageId(providerResponse) };
+        return { processed: true, providerMessageId: templateProviderMessageId };
       } catch (error) {
         if (messageLogId) {
           await WhatsAppMessageLogModel.findByIdAndUpdate(messageLogId, {
@@ -166,6 +205,13 @@ export const startOutboundWorker = (): Worker => {
             },
           });
         }
+        logger.error("RES FROM WHATSAPP ERROR", {
+          jobId: String(job.id || ""),
+          to: recipientPhone,
+          messageType: String(jobData.messageType || ""),
+          templateName: String(jobData.templateName || ""),
+          error: (error as Error).message,
+        });
         throw error;
       }
     },

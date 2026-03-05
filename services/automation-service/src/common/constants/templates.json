@@ -21,6 +21,13 @@
       "category": "UTILITY",
       "variableKeys": ["memberName", "amount", "dueDate", "reason"]
     },
+    "member_payment_reminder_1": {
+      "name": "member_payment_reminder_1",
+      "messageType": "template",
+      "language": "en_US",
+      "category": "UTILITY",
+      "variableKeys": ["memberName", "feeMonth", "gymName", "amount", "dueDate"]
+    },
     "owner_command_response": {
       "name": "owner_command_response",
       "messageType": "text",

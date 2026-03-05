@@ -76,6 +76,20 @@ export const gymController = {
       "Pending payments fetched successfully",
     );
   },
+  async sendCurrentMonthPaymentRequests(req: Request, res: Response) {
+    return ok(
+      res,
+      await gymCore.sendCurrentMonthPaymentRequests(req.authContext, req.db),
+      "Payment requests sent successfully",
+    );
+  },
+  async sendPaymentRequestToMember(req: Request, res: Response) {
+    return ok(
+      res,
+      await gymCore.sendPaymentRequestToMember(req.params.id, req.authContext, req.db),
+      "Payment request sent successfully",
+    );
+  },
   async billingSummary(req: Request, res: Response) {
     return ok(
       res,

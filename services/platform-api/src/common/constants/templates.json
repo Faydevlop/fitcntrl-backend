@@ -13,6 +13,12 @@
       "category": "UTILITY",
       "variableKeys": ["memberName", "amount", "paidDate"]
     },
+    "member_payment_reminder_1": {
+      "name": "member_payment_reminder_1",
+      "language": "en_US",
+      "category": "UTILITY",
+      "variableKeys": ["memberName", "feeMonth", "gymName", "amount", "dueDate"]
+    },
     "announcement_broadcast": {
       "name": "announcement_broadcast",
       "language": "en_US",

@@ -17,7 +17,7 @@ import { UserModel } from "../../../auth/model/user.model";
 import { logger } from "../../../../common/logger/app-logger";
 import { encryptFieldValue } from "../../../../common/utils/field-crypto";
 import { composePhoneWithCountryCode, normalizeCountryCode } from "../../../../common/utils/phone";
-import { getTemplateConfig, TEMPLATE_NAMES } from "../../../../common/constants/templates";
+import { TEMPLATE_NAMES } from "../../../../common/constants/templates";
 
 type QueryInput = Record<string, unknown>;
 type AuthContext = { userId?: string; gymId?: string; role?: string } | undefined;
@@ -65,6 +65,44 @@ const nextMonthFirst = (startDate: Date): Date => {
 
 const getMonthLabel = (date: Date): string => {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+};
+
+const getCurrentMonthRangeUtc = (): { start: Date; endExclusive: Date } => {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+  const endExclusive = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0, 0));
+  return { start, endExclusive };
+};
+
+const formatMonthYearLabel = (date: Date): string => {
+  return date.toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Kolkata",
+  });
+};
+
+const formatDateDdMmYyyy = (date: Date): string => {
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = String(date.getUTCFullYear());
+  return `${day}-${month}-${year}`;
+};
+
+const buildUpiPaymentLink = (input: {
+  upiId: string;
+  payeeName: string;
+  amount: number;
+  feeMonth: string;
+}): string => {
+  const params = new URLSearchParams({
+    pa: input.upiId,
+    pn: input.payeeName,
+    am: String(input.amount),
+    tn: `Gym Fee ${input.feeMonth}`,
+  });
+
+  return `upi://pay?${params.toString()}`;
 };
 
 const logGymAction = async (
@@ -143,17 +181,20 @@ const assertSubscriptionUsable = async (gymId: Types.ObjectId): Promise<void> =>
   }
 };
 
-const getGymPlanForLimits = async (gymId: Types.ObjectId) => {
-  const gym = await GymModel.findById(gymId).select("planId").lean();
+const getGymPlanForLimits = async (gymId: Types.ObjectId, db?: Connection) => {
+  const gymModel = (db?.models.Gym as typeof GymModel) || GymModel;
+  const planModel = (db?.models.Plan as typeof PlanModel) || PlanModel;
+
+  const gym = await gymModel.findById(gymId).select("planId").lean();
   if (!gym?.planId) {
     throw new Error("Gym plan is not configured");
   }
 
-  const plan = await PlanModel.findById(gym.planId)
+  const plan = await planModel.findById(gym.planId)
     .select("name maxMembers whatsappLimit isBasic")
     .lean();
   if (!plan) {
-    throw new Error("Plan not found for this gym");
+    throw new Error("Plan not found for this gym. Please reassign a valid plan in admin.");
   }
 
   return plan;
@@ -169,8 +210,12 @@ type EncryptedLineConfig = {
 const getOutboundLineConfigForGym = async (
   gymId: Types.ObjectId,
   isBasicPlan: boolean,
+  db?: Connection,
 ): Promise<EncryptedLineConfig | null> => {
-  const gym = await GymModel.findById(gymId).select("waMode").lean();
+  const gymModel = (db?.models.Gym as typeof GymModel) || GymModel;
+  const whatsAppLineModel = (db?.models.WhatsAppLine as typeof WhatsAppLineModel) || WhatsAppLineModel;
+
+  const gym = await gymModel.findById(gymId).select("waMode").lean();
   if (!gym) {
     return null;
   }
@@ -183,13 +228,13 @@ const getOutboundLineConfigForGym = async (
   } | null = null;
 
   if (!isBasicPlan && gym.waMode === "dedicated") {
-    line = await WhatsAppLineModel.findOne({ assignedGymId: gymId, isActive: true })
+    line = await whatsAppLineModel.findOne({ assignedGymId: gymId, isActive: true })
       .select("phone phoneNumberId wabaId tokenEncrypted")
       .lean();
   }
 
   if (!line) {
-    line = await WhatsAppLineModel.findOne({ setForBasic: true, isActive: true })
+    line = await whatsAppLineModel.findOne({ setForBasic: true, isActive: true })
       .select("phone phoneNumberId wabaId tokenEncrypted")
       .lean();
   }
@@ -218,7 +263,6 @@ const reserveWhatsAppQuota = async (gymId: Types.ObjectId, planLimit: number): P
       $setOnInsert: {
         gymId,
         monthKey,
-        planLimit,
         messagesUsed: 0,
         messagesFailed: 0,
         conversationsCount: 0,
@@ -286,6 +330,192 @@ const persistOutgoingMessage = async (db: Connection | undefined, record: Record
       error: (error as Error).message,
     });
   }
+};
+
+const sendMemberPaymentRequestMessages = async (input: {
+  gymId: Types.ObjectId;
+  member: {
+    _id: Types.ObjectId;
+    name?: string;
+    countryCode?: string;
+    phone?: string;
+    fee?: number;
+    nextDueDate?: Date | string;
+  };
+  plan: {
+    whatsappLimit?: number;
+    isBasic?: boolean;
+  };
+  auth: AuthContext;
+  db?: Connection;
+}): Promise<{ memberId: string; queuedMessages: number }> => {
+  const { gymId, member, plan, auth, db } = input;
+  const gymModel = (db?.models.Gym as typeof GymModel) || GymModel;
+  const userModel = (db?.models.User as typeof UserModel) || UserModel;
+  const gym = await gymModel.findById(gymId).select("name gymDisplayName upiId").lean();
+  if (!gym) {
+    throw new Error("Gym not found");
+  }
+
+  const upiId = String(gym.upiId || "").trim();
+  if (!upiId) {
+    throw new Error("UPI ID is not configured for this gym. Please update Billing settings first.");
+  }
+
+  const recipientPhone = composePhoneWithCountryCode(
+    member.countryCode ? String(member.countryCode) : undefined,
+    String(member.phone || ""),
+  );
+  if (!recipientPhone) {
+    throw new Error(`Invalid phone number for member ${String(member.name || member._id.toString())}`);
+  }
+
+  const outboundLineConfig = await getOutboundLineConfigForGym(gymId, Boolean(plan.isBasic), db);
+  if (!outboundLineConfig) {
+    throw new Error("No active WhatsApp sender line configured for this gym.");
+  }
+
+  const dueDate = parseDate(member.nextDueDate, new Date());
+  const feeMonth = formatMonthYearLabel(dueDate);
+  const dueDateLabel = formatDateDdMmYyyy(dueDate);
+  const amount = Number(member.fee || 0);
+  const gymName = String(gym.gymDisplayName || gym.name || "FitCntrl");
+  const upiLink = buildUpiPaymentLink({
+    upiId,
+    payeeName: gymName,
+    amount,
+    feeMonth,
+  });
+
+  const ownerFallback = await userModel.findOne({ gymId, role: "gym_owner" }).select("_id").lean();
+  const sentByUserId =
+    auth?.userId && Types.ObjectId.isValid(auth.userId)
+      ? new Types.ObjectId(auth.userId)
+      : ownerFallback?._id || new Types.ObjectId();
+  const memberPaymentReminderTemplateName =
+    (TEMPLATE_NAMES as Record<string, string> | undefined)?.MEMBER_PAYMENT_REMINDER_1 ||
+    "member_payment_reminder_1";
+  const upiText = `you can pay using this link\n${upiLink}`;
+
+  await reserveWhatsAppQuota(gymId, Number(plan.whatsappLimit || 0));
+  await reserveWhatsAppQuota(gymId, Number(plan.whatsappLimit || 0));
+  try {
+    await waOutboundQueue.add(
+      "member-payment-reminder-template",
+      {
+        gymId: gymId.toString(),
+        memberId: member._id.toString(),
+        ownerUserId: ownerFallback?._id?.toString() || sentByUserId.toString(),
+        to: recipientPhone,
+        messageType: "template",
+        templateName: memberPaymentReminderTemplateName,
+        variables: {
+          memberName: String(member.name || ""),
+          feeMonth,
+          gymName,
+          amount: String(amount),
+          dueDate: dueDateLabel,
+        },
+        templateVariables: [String(member.name || ""), feeMonth, gymName, String(amount), dueDateLabel],
+        correlationId: `member-payment-reminder-template:${member._id.toString()}:${Date.now()}`,
+        lineConfig: outboundLineConfig,
+        followUp: {
+          messageType: "text",
+          message: upiText,
+        },
+      },
+      {
+        jobId: `member-payment-reminder-template:${member._id.toString()}:${Date.now()}`,
+      },
+    );
+
+    await incrementDailySentUsage(gymId);
+    await incrementDailySentUsage(gymId);
+    await persistOutgoingMessage(db, {
+      gymId,
+      sentBy: sentByUserId,
+      sentByRole: auth?.role === "admin" ? "admin" : "gym_owner",
+      channel: "whatsapp",
+      direction: "outbound",
+      source: "member_payment_reminder_template",
+      content: `Payment reminder for ${String(member.name || "")} (${feeMonth})`,
+      recipientPhone,
+      phoneUsed: outboundLineConfig.phone,
+      phoneNumberIdUsed: outboundLineConfig.phoneNumberIdEncrypted,
+      wabaIdUsed: outboundLineConfig.wabaIdEncrypted,
+      status: "queued",
+      meta: {
+        memberId: member._id.toString(),
+        templateName: memberPaymentReminderTemplateName,
+        templateVariables: [String(member.name || ""), feeMonth, gymName, String(amount), dueDateLabel],
+      },
+    });
+    await persistOutgoingMessage(db, {
+      gymId,
+      sentBy: sentByUserId,
+      sentByRole: auth?.role === "admin" ? "admin" : "gym_owner",
+      channel: "whatsapp",
+      direction: "outbound",
+      source: "member_payment_reminder_upi_link",
+      content: upiText,
+      recipientPhone,
+      phoneUsed: outboundLineConfig.phone,
+      phoneNumberIdUsed: outboundLineConfig.phoneNumberIdEncrypted,
+      wabaIdUsed: outboundLineConfig.wabaIdEncrypted,
+      status: "queued",
+      meta: {
+        memberId: member._id.toString(),
+        upiLink,
+      },
+    });
+  } catch (error) {
+    await releaseWhatsAppQuota(gymId);
+    await releaseWhatsAppQuota(gymId);
+    await persistOutgoingMessage(db, {
+      gymId,
+      sentBy: sentByUserId,
+      sentByRole: auth?.role === "admin" ? "admin" : "gym_owner",
+      channel: "whatsapp",
+      direction: "outbound",
+      source: "member_payment_reminder_template",
+      content: `Payment reminder for ${String(member.name || "")} (${feeMonth})`,
+      recipientPhone,
+      phoneUsed: outboundLineConfig.phone,
+      phoneNumberIdUsed: outboundLineConfig.phoneNumberIdEncrypted,
+      wabaIdUsed: outboundLineConfig.wabaIdEncrypted,
+      status: "failed",
+      error: (error as Error).message,
+      meta: {
+        memberId: member._id.toString(),
+        templateName: memberPaymentReminderTemplateName,
+      },
+    });
+    await persistOutgoingMessage(db, {
+      gymId,
+      sentBy: sentByUserId,
+      sentByRole: auth?.role === "admin" ? "admin" : "gym_owner",
+      channel: "whatsapp",
+      direction: "outbound",
+      source: "member_payment_reminder_upi_link",
+      content: upiText,
+      recipientPhone,
+      phoneUsed: outboundLineConfig.phone,
+      phoneNumberIdUsed: outboundLineConfig.phoneNumberIdEncrypted,
+      wabaIdUsed: outboundLineConfig.wabaIdEncrypted,
+      status: "failed",
+      error: (error as Error).message,
+      meta: {
+        memberId: member._id.toString(),
+        upiLink,
+      },
+    });
+    throw error;
+  }
+
+  return {
+    memberId: member._id.toString(),
+    queuedMessages: 2,
+  };
 };
 
 export const gymCore = {
@@ -420,7 +650,7 @@ export const gymCore = {
     if (payload.plan !== undefined && String(payload.plan).toLowerCase() !== "monthly") {
       throw new Error("Only monthly member plan is supported.");
     }
-    const plan = await getGymPlanForLimits(gymId);
+    const plan = await getGymPlanForLimits(gymId, db);
 
     const currentMemberCount = await MemberModel.countDocuments({
       gymId,
@@ -432,142 +662,26 @@ export const gymCore = {
       );
     }
 
-    await reserveWhatsAppQuota(gymId, Number(plan.whatsappLimit || 0));
-    let quotaConsumed = true;
+    const member = await MemberModel.create({
+      gymId,
+      name: String(payload.name || ""),
+      countryCode: normalizeCountryCode(
+        typeof payload.countryCode === "string" ? payload.countryCode : undefined,
+      ),
+      phone: String(payload.phone || ""),
+      plan: "monthly",
+      fee: Number(payload.fee || 0),
+      joinDate,
+      nextDueDate: nextMonthFirst(joinDate),
+      status: payload.status ? String(payload.status) : "active",
+      paymentStatus: payload.paymentStatus ? String(payload.paymentStatus) : "pending",
+      notes: payload.notes ? String(payload.notes) : "",
+    });
 
-    try {
-      const member = await MemberModel.create({
-        gymId,
-        name: String(payload.name || ""),
-        countryCode: normalizeCountryCode(
-          typeof payload.countryCode === "string" ? payload.countryCode : undefined,
-        ),
-        phone: String(payload.phone || ""),
-        plan: "monthly",
-        fee: Number(payload.fee || 0),
-        joinDate,
-        nextDueDate: nextMonthFirst(joinDate),
-        status: payload.status ? String(payload.status) : "active",
-        paymentStatus: payload.paymentStatus ? String(payload.paymentStatus) : "pending",
-        notes: payload.notes ? String(payload.notes) : "",
-      });
+    await refreshMemberCounts(gymId);
+    await logGymAction(auth, gymId, "Created Member", "member", member._id.toString());
 
-      const ownerFallback = await UserModel.findOne({ gymId, role: "gym_owner" }).select("_id").lean();
-      const ownerUserId =
-        auth?.userId && Types.ObjectId.isValid(auth.userId)
-          ? new Types.ObjectId(auth.userId)
-          : ownerFallback?._id || new Types.ObjectId();
-      const outboundLineConfig = await getOutboundLineConfigForGym(gymId, Boolean(plan.isBasic));
-      const gym = await GymModel.findById(gymId).select("name gymDisplayName").lean();
-      const gymName = String(gym?.gymDisplayName || gym?.name || "FitCntrl");
-      const memberWelcomeTemplate = getTemplateConfig(TEMPLATE_NAMES.MEMBER_WELCOME);
-      const recipientPhone = composePhoneWithCountryCode(member.countryCode, member.phone);
-      const queuePayload = {
-        gymId: gymId.toString(),
-        memberId: member._id.toString(),
-        ownerUserId: ownerFallback?._id?.toString() || ownerUserId.toString(),
-        to: recipientPhone,
-        messageType: "template",
-        templateName: memberWelcomeTemplate.name,
-        language: memberWelcomeTemplate.language,
-        category: memberWelcomeTemplate.category,
-        variables: {
-          memberName: member.name,
-          gymName,
-        },
-        templateVariables: [member.name, gymName],
-        template: {
-          name: memberWelcomeTemplate.name,
-          language: memberWelcomeTemplate.language,
-          category: memberWelcomeTemplate.category,
-          components: [
-            {
-              type: "BODY",
-              text: memberWelcomeTemplate.bodyText,
-            },
-          ],
-        },
-        correlationId: `member-welcome:${member._id.toString()}`,
-        lineConfig: outboundLineConfig || undefined,
-      };
-      const welcomeContent = `Hi ${member.name} Welcome to ${gymName}! Your membership has been activated successfully.`;
-
-      try {
-        if (!outboundLineConfig) {
-          logger.warn("No active WhatsApp sender line configured for this gym.", {
-            gymId: gymId.toString(),
-            memberId: member._id.toString(),
-            templateName: memberWelcomeTemplate.name,
-          });
-        }
-
-        await waOutboundQueue.add("member-welcome", queuePayload, {
-          jobId: `member-welcome:${member._id.toString()}`,
-        });
-        await incrementDailySentUsage(gymId);
-        await persistOutgoingMessage(db, {
-          gymId,
-          sentBy: ownerUserId,
-          sentByRole: auth?.role === "admin" ? "admin" : "gym_owner",
-          channel: "whatsapp",
-          direction: "outbound",
-          source: "member_welcome",
-          content: welcomeContent,
-          recipientPhone,
-          phoneUsed: outboundLineConfig?.phone,
-          phoneNumberIdUsed: outboundLineConfig?.phoneNumberIdEncrypted,
-          wabaIdUsed: outboundLineConfig?.wabaIdEncrypted,
-          status: "queued",
-          meta: {
-            memberId: member._id.toString(),
-            templateName: memberWelcomeTemplate.name,
-            language: memberWelcomeTemplate.language,
-            category: memberWelcomeTemplate.category,
-            templateVariables: [member.name, gymName],
-          },
-        });
-      } catch (error) {
-        await releaseWhatsAppQuota(gymId);
-        quotaConsumed = false;
-        await persistOutgoingMessage(db, {
-          gymId,
-          sentBy: ownerUserId,
-          sentByRole: auth?.role === "admin" ? "admin" : "gym_owner",
-          channel: "whatsapp",
-          direction: "outbound",
-          source: "member_welcome",
-          content: welcomeContent,
-          recipientPhone,
-          phoneUsed: outboundLineConfig?.phone,
-          phoneNumberIdUsed: outboundLineConfig?.phoneNumberIdEncrypted,
-          wabaIdUsed: outboundLineConfig?.wabaIdEncrypted,
-          status: "failed",
-          error: (error as Error).message,
-          meta: {
-            memberId: member._id.toString(),
-            templateName: memberWelcomeTemplate.name,
-            language: memberWelcomeTemplate.language,
-            category: memberWelcomeTemplate.category,
-            templateVariables: [member.name, gymName],
-          },
-        });
-        logger.warn("Member created but welcome message queueing failed", {
-          gymId: gymId.toString(),
-          memberId: member._id.toString(),
-          error: (error as Error).message,
-        });
-      }
-
-      await refreshMemberCounts(gymId);
-      await logGymAction(auth, gymId, "Created Member", "member", member._id.toString());
-
-      return member.toObject();
-    } catch (error) {
-      if (quotaConsumed) {
-        await releaseWhatsAppQuota(gymId);
-      }
-      throw error;
-    }
+    return member.toObject();
   },
 
   async getMemberById(id: string, auth: AuthContext) {
@@ -717,8 +831,8 @@ export const gymCore = {
     const gymId = assertGymId(auth);
     await assertSubscriptionUsable(gymId);
     const payload = (rawPayload || {}) as Record<string, unknown>;
-    const plan = await getGymPlanForLimits(gymId);
-    const outboundLineConfig = await getOutboundLineConfigForGym(gymId, Boolean(plan.isBasic));
+    const plan = await getGymPlanForLimits(gymId, db);
+    const outboundLineConfig = await getOutboundLineConfigForGym(gymId, Boolean(plan.isBasic), db);
     await reserveWhatsAppQuota(gymId, Number(plan.whatsappLimit || 0));
     let quotaConsumed = true;
 
@@ -898,6 +1012,138 @@ export const gymCore = {
           Math.floor((Date.now() - new Date(member.nextDueDate).getTime()) / (1000 * 60 * 60 * 24)),
         ),
       })),
+    };
+  },
+
+  async sendCurrentMonthPaymentRequests(auth: AuthContext, db?: Connection) {
+    const gymId = assertGymId(auth);
+    await assertSubscriptionUsable(gymId);
+
+    const memberModel = (db?.models.Member as typeof MemberModel) || MemberModel;
+    const plan = await getGymPlanForLimits(gymId, db);
+    const { start, endExclusive } = getCurrentMonthRangeUtc();
+
+    let members = await memberModel
+      .find({
+        gymId,
+        paymentStatus: "pending",
+        status: { $ne: "blacklisted" },
+        nextDueDate: { $gte: start, $lt: endExclusive },
+      })
+      .select("_id name countryCode phone fee nextDueDate paymentStatus status")
+      .lean();
+    let targetScope: "current_month_due" | "all_pending_fallback" = "current_month_due";
+
+    if (members.length === 0) {
+      members = await memberModel
+        .find({
+          gymId,
+          paymentStatus: "pending",
+          status: { $ne: "blacklisted" },
+        })
+        .select("_id name countryCode phone fee nextDueDate paymentStatus status")
+        .lean();
+      targetScope = "all_pending_fallback";
+    }
+
+    if (members.length === 0) {
+      throw new Error("No pending members found.");
+    }
+
+    const results: Array<{ memberId: string; status: "queued" | "failed"; error?: string }> = [];
+    for (const member of members) {
+      try {
+        await sendMemberPaymentRequestMessages({
+          gymId,
+          member: {
+            _id: member._id,
+            name: String(member.name || ""),
+            countryCode: String(member.countryCode || ""),
+            phone: String(member.phone || ""),
+            fee: Number(member.fee || 0),
+            nextDueDate: member.nextDueDate,
+          },
+          plan,
+          auth,
+          db,
+        });
+        results.push({ memberId: member._id.toString(), status: "queued" });
+      } catch (error) {
+        results.push({
+          memberId: member._id.toString(),
+          status: "failed",
+          error: (error as Error).message,
+        });
+      }
+    }
+
+    const queuedCount = results.filter(item => item.status === "queued").length;
+    const failedCount = results.length - queuedCount;
+    if (queuedCount === 0) {
+      const firstError = results.find(item => item.error)?.error || "Unknown error";
+      throw new Error(`Failed to queue payment requests. ${firstError}`);
+    }
+
+    await logGymAction(auth, gymId, "Sent Payment Requests", "member_payment_reminder", undefined, {
+      totalMembers: results.length,
+      queuedCount,
+      failedCount,
+      month: formatMonthYearLabel(start),
+      targetScope,
+    });
+
+    return {
+      totalMembers: results.length,
+      queuedCount,
+      failedCount,
+      month: formatMonthYearLabel(start),
+      targetScope,
+      results,
+    };
+  },
+
+  async sendPaymentRequestToMember(memberId: string, auth: AuthContext, db?: Connection) {
+    const gymId = assertGymId(auth);
+    await assertSubscriptionUsable(gymId);
+
+    const memberModel = (db?.models.Member as typeof MemberModel) || MemberModel;
+    const member = await memberModel
+      .findOne({
+        _id: memberId,
+        gymId,
+        paymentStatus: "pending",
+        status: { $ne: "blacklisted" },
+      })
+      .select("_id name countryCode phone fee nextDueDate paymentStatus status")
+      .lean();
+
+    if (!member) {
+      throw new Error("Pending member not found for sending payment request.");
+    }
+
+    const plan = await getGymPlanForLimits(gymId, db);
+    await sendMemberPaymentRequestMessages({
+      gymId,
+      member: {
+        _id: member._id,
+        name: String(member.name || ""),
+        countryCode: String(member.countryCode || ""),
+        phone: String(member.phone || ""),
+        fee: Number(member.fee || 0),
+        nextDueDate: member.nextDueDate,
+      },
+      plan,
+      auth,
+      db,
+    });
+
+    await logGymAction(auth, gymId, "Sent Payment Request", "member_payment_reminder", member._id.toString(), {
+      month: formatMonthYearLabel(parseDate(member.nextDueDate, new Date())),
+    });
+
+    return {
+      memberId: member._id.toString(),
+      queuedMessages: 2,
     };
   },
 

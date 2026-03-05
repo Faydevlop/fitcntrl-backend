@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { waOutboundQueue, waReminderQueue, waReportQueue } from "../../../../bootstrap/queues";
 import { WhatsAppMessageLogModel } from "../../model/whatsapp-message-log.model";
 import { GymRefModel, MemberRefModel, UserRefModel } from "../../../webhook/model/platform-ref.model";
-import { TEMPLATE_NAMES } from "../../../../common/constants/templates";
+import { TEMPLATE_NAMES } from "../../../../common/constants/template-registry";
 import { resolveEncryptedOutboundLineConfig } from "../../../../common/utils/outbound-line-config";
 
 type ReminderPayload = {

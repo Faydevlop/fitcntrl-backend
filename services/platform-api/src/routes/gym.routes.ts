@@ -145,6 +145,28 @@ gymRoutes.use(requireAuthenticated, allowRoles("gym_owner"));
  *       200:
  *         description: Pending payments fetched
  *
+ * /api/gym/payments/reminders/send-all:
+ *   post:
+ *     tags: [Gym]
+ *     summary: Send payment reminder and UPI link to all current-month pending members
+ *     responses:
+ *       200:
+ *         description: Payment requests queued
+ *
+ * /api/gym/members/{id}/send-payment-request:
+ *   post:
+ *     tags: [Gym]
+ *     summary: Send payment reminder and UPI link to a single pending member
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Payment request queued
+ *
  * /api/gym/billing:
  *   get:
  *     tags: [Gym]
@@ -210,6 +232,12 @@ gymRoutes.post(
 );
 gymRoutes.get("/payments/pending", asyncHandler(gymController.pendingPayments));
 gymRoutes.post("/payments/pending/getAll", asyncHandler(gymController.pendingPayments));
+gymRoutes.post("/payments/reminders/send-all", asyncHandler(gymController.sendCurrentMonthPaymentRequests));
+gymRoutes.post(
+  "/members/:id/send-payment-request",
+  requireObjectIdParam("id"),
+  asyncHandler(gymController.sendPaymentRequestToMember),
+);
 
 gymRoutes.get("/billing", asyncHandler(gymController.billingSummary));
 gymRoutes.patch("/billing", asyncHandler(gymController.updateSettings));

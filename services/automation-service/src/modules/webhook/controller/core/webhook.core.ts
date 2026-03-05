@@ -4,7 +4,7 @@ import { waCommandQueue, waOutboundQueue } from "../../../../bootstrap/queues";
 import { WhatsAppMessageLogModel } from "../../../outbound/model/whatsapp-message-log.model";
 import { WebhookEventModel } from "../../model/webhook-event.model";
 import { MemberRefModel, UserRefModel } from "../../model/platform-ref.model";
-import { TEMPLATE_NAMES } from "../../../../common/constants/templates";
+import { TEMPLATE_NAMES } from "../../../../common/constants/template-registry";
 import { resolveEncryptedOutboundLineConfig } from "../../../../common/utils/outbound-line-config";
 
 type IncomingMessage = {
